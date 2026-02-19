@@ -1,0 +1,211 @@
+// ==========================================
+// 1. USER MANAGEMENT (Source: PDF + Draw.io)
+// ==========================================
+
+Table Users {
+  user_id integer [primary key]
+  full_name varchar
+  email varchar
+  password_hash varchar
+  phone_number varchar
+  created_at timestamp
+  // LOGISTICS: Links user to their local fulfillment center (Draw.io)
+  nearby_warehouse_id integer 
+}
+
+Table Addresses {
+  address_id integer [primary key]
+  user_id integer
+  street_address varchar
+  city varchar
+  zip_code varchar
+  country varchar
+  is_default boolean
+}
+
+// ==========================================
+// 2. CATALOG & INVENTORY (Source: PDF + Draw.io)
+// ==========================================
+
+Table Products {
+  product_id integer [primary key]
+  seller_id integer
+  category_id integer
+  name varchar
+  description varchar
+  price decimal
+  image_url varchar
+  created_at timestamp
+  // Note: 'stock_quantity' removed from here. Stock is now in 'Inventory' table.
+}
+
+Table Categories {
+  category_id integer [primary key]
+  parent_id integer
+  name varchar
+}
+
+Table Sellers {
+  seller_id integer [primary key]
+  company_name varchar
+  contact_email varchar
+  gst_number varchar
+  description varchar
+}
+
+// NEW TABLE: Necessary to link Products (PDF) to Warehouses (Draw.io)
+Table Inventory {
+  inventory_id integer [primary key]
+  product_id integer
+  warehouse_id integer
+  stock_quantity integer [note: "How many items are in THIS specific warehouse"]
+}
+
+// ==========================================
+// 3. SHOPPING & ORDERS (Source: PDF + User Request)
+// ==========================================
+
+Table Cart {
+  cart_id integer [primary key]
+  user_id integer
+  product_id integer
+  quantity integer
+  added_at timestamp
+}
+
+Table Orders {
+  order_id integer [primary key]
+  user_id integer
+  // Shipping Address snapshot for this specific order
+  address_id integer
+  status varchar [note: "'Pending', 'Processing', 'Shipped', 'Delivered'"]
+  
+  // FINANCIALS
+  total_amount decimal
+  discount_id integer [note: "The coupon code used"]
+  discount_amount decimal [note: "Saved Value. Essential for history."]
+  
+  order_date timestamp
+}
+
+Table Order_Items {
+  item_id integer [primary key]
+  order_id integer
+  product_id integer
+  quantity integer
+  price_at_purchase decimal [note: "Price snapshot in case product price changes"]
+}
+
+Table Wishlists {
+  wishlist_id integer [primary key]
+  user_id integer
+  product_id integer
+  added_date date
+}
+
+Table Reviews {
+  review_id integer [primary key]
+  user_id integer
+  product_id integer
+  rating integer
+  comment varchar
+  review_date date
+}
+
+Table Payments {
+  payment_id integer [primary key]
+  order_id integer
+  payment_method varchar
+  transaction_id varchar
+  transaction_status varchar
+  amount decimal
+  payment_date timestamp
+}
+
+// ==========================================
+// 4. LOGISTICS ENGINE (Source: Draw.io)
+// ==========================================
+
+Table Warehouses {
+  warehouse_id integer [primary key]
+  name varchar
+  street_address varchar
+  city varchar
+  zip_code varchar
+  capacity integer
+}
+
+Table Delivery_Men {
+  deliveryman_id integer [primary key]
+  full_name varchar
+  phone_number varchar
+  vehicle_type varchar
+  status varchar [note: "'Available', 'On_Route'"]
+  // LINK: The hub they report to (Draw.io)
+  warehouse_id integer 
+}
+
+Table Shipments {
+  shipment_id integer [primary key]
+  order_id integer
+  courier_name varchar
+  tracking_number varchar
+  status varchar
+  estimated_delivery date
+  // LINK: The specific driver (Draw.io)
+  delivery_man_id integer
+}
+
+// ==========================================
+// 5. MARKETING ENGINE (Source: User Request)
+// ==========================================
+
+Table Discounts {
+  discount_id integer [primary key]
+  code varchar [unique]
+  description varchar
+  discount_type varchar [note: "'percentage' or 'fixed'"]
+  value decimal
+  min_order_value decimal
+  start_date timestamp
+  end_date timestamp
+  usage_limit integer
+  is_active boolean
+}
+
+// ==========================================
+// RELATIONSHIPS
+// ==========================================
+
+// Users
+Ref: Addresses.user_id > Users.user_id
+Ref: Users.nearby_warehouse_id > Warehouses.warehouse_id
+
+// Catalog
+Ref: Products.seller_id > Sellers.seller_id
+Ref: Products.category_id > Categories.category_id
+
+// Inventory (The Bridge)
+Ref: Inventory.product_id > Products.product_id
+Ref: Inventory.warehouse_id > Warehouses.warehouse_id
+
+// Shopping
+Ref: Cart.user_id > Users.user_id
+Ref: Cart.product_id > Products.product_id
+Ref: Wishlists.user_id > Users.user_id
+Ref: Wishlists.product_id > Products.product_id
+Ref: Reviews.user_id > Users.user_id
+Ref: Reviews.product_id > Products.product_id
+
+// Orders
+Ref: Orders.user_id > Users.user_id
+Ref: Orders.address_id > Addresses.address_id
+Ref: Orders.discount_id > Discounts.discount_id
+Ref: Order_Items.order_id > Orders.order_id
+Ref: Order_Items.product_id > Products.product_id
+Ref: Payments.order_id > Orders.order_id
+
+// Logistics
+Ref: Delivery_Men.warehouse_id > Warehouses.warehouse_id
+Ref: Shipments.order_id > Orders.order_id
+Ref: Shipments.delivery_man_id > Delivery_Men.deliveryman_id

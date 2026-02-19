@@ -1,0 +1,80 @@
+Here are the verified relationships for your **User Cluster**, including the specific **Relationship Names** (verbs) you should write inside the diamonds.
+
+I have separated them into **Weak** (Double Diamond) and **Strong** (Single Diamond) relationships so you can draw them correctly on your paper.
+
+### **Group 1: The Weak Relationships (Cascading Personal Data)**
+
+*Draw these with **Double Rectangles** and **Double Diamonds**.*
+
+1. **User  Addresses**
+* **Entity:** `Addresses`
+* **Relationship Name:** **Has** (or *Resides At*)
+* **Cardinality:** 1 : N
+
+
+2. **User  User_Subscriptions**
+* **Entity:** `User_Subscriptions`
+* **Relationship Name:** **Subscribes** (or *Holds*)
+* **Cardinality:** 1 : N
+
+
+3. **User  Wishlists**
+* **Entity:** `Wishlists`
+* **Relationship Name:** **Maintains** (or *Keeps*)
+* **Cardinality:** 1 : N
+
+
+4. **User  Cart**
+* **Entity:** `Cart`
+* **Relationship Name:** **Fills** (or *Compiles*)
+* **Cardinality:** 1 : N
+* *Note: Since `Cart` functions as the "Cart Items" table in your schema, "Fills" is the most accurate verb.*
+
+
+5. **User  Browsing_History**
+* **Entity:** `Browsing_History`
+* **Relationship Name:** **Generates** (or *Views*)
+* **Cardinality:** 1 : N
+
+
+
+---
+
+### **Group 2: The Strong Relationships (Public/Financial Data)**
+
+*Draw these with **Single Rectangles** and **Single Diamonds**.*
+
+6. **User  Orders**
+* **Entity:** `Orders`
+* **Relationship Name:** **Places**
+* **Cardinality:** 1 : N
+* *Critical:* This is the most important relationship in your entire system.
+
+
+7. **User  Reviews**
+* **Entity:** `Reviews`
+* **Relationship Name:** **Writes** (or *Posts*)
+* **Cardinality:** 1 : N
+
+
+8. **User  Product_Questions**
+* **Entity:** `Product_Questions`
+* **Relationship Name:** **Asks**
+* **Cardinality:** 1 : N
+
+
+9. **User  Product_Answers**
+* **Entity:** `Product_Answers`
+* **Relationship Name:** **Answers**
+* **Cardinality:** 1 : N
+
+
+
+### **Summary for Drawing**
+
+* **Center:** `User`
+* **Radiating Out:** 9 Lines total.
+* **Diamonds:** 5 Double (Personal), 4 Single (Public).
+
+**Next Step:**
+Would you like to move on to the **Product Cluster**? (This one has the complex "Chain" structure: Seller  Product  Variant  Inventory).

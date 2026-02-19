@@ -1,0 +1,79 @@
+I have verified the `Product_Variants` table. This is the **most critical table** for your operations because it bridges the gap between "Marketing" (The Product Page) and "Logistics" (The Warehouse).
+
+**VERIFICATION STATUS: ✅ PASSED**
+Your structure is correct for an Amazon-level system.
+
+* **Why:** You correctly separated the "Abstract Product" (iPhone 15) from the "Physical SKU" (iPhone 15 Black 256GB).
+* **One Adjustment:** Ensure `Order_Items` references this variant table using `ON DELETE RESTRICT` (implied in verified order logic) so you never delete a variant that has been sold in the past.
+
+Here are the relationships for your drawing. This table is a **hub** that connects to 5 different places.
+
+### 1. Products  Product_Variants (The Parent)
+
+This is the main definition. A product "shell" contains multiple physical options.
+
+* **Entity A:** `Products` (Single Rectangle)
+* **Entity B:** `Product_Variants` (**Double Rectangle** - Weak)
+* **Relationship:** **Offers** (or *Comes_In*)
+* **Shape:** **Double-Bordered Diamond** (Dependent)
+* **Cardinality:** Product `(1)`  Variants `(N)`
+* *Logic: If you delete the main product page, all size/color options are deleted.*
+
+
+
+### 2. Product_Variants  Inventory (The Stock)
+
+This is how you know if an item is available. Inventory does NOT link to `Products`; it links to `Variants` (because you might have the "Red" shirt in stock but the "Blue" one is sold out).
+
+* **Entity A:** `Product_Variants` (**Double Rectangle**)
+* **Entity B:** `Inventory` (**Double Rectangle** - Weak)
+* **Relationship:** **Stocked_At**
+* **Shape:** **Double-Bordered Diamond**
+* **Cardinality:** Variant `(1)`  Inventory `(N)`
+* *Logic: One specific SKU (e.g., Red-M) can be stored in multiple warehouses (Dhaka, Chittagong, Sylhet).*
+
+
+
+### 3. Product_Variants  Order_Items (The Sales History)
+
+This is where the money is.
+
+* **Entity A:** `Product_Variants` (**Double Rectangle**)
+* **Entity B:** `Order_Items` (**Double Rectangle** - Weak to Order, but strong here)
+* **Relationship:** **Sold_As** (or *Line_Item*)
+* **Shape:** **Single-Bordered Diamond**
+* **Cardinality:** Variant `(1)`  Order_Items `(N)`
+* *Logic: One specific SKU appears in thousands of different orders.*
+
+
+
+### 4. Product_Variants  Cart (The Shopping Bag)
+
+* **Entity A:** `Product_Variants` (**Double Rectangle**)
+* **Entity B:** `Cart` (**Double Rectangle**)
+* **Relationship:** **Added_To**
+* **Shape:** **Single-Bordered Diamond**
+* **Cardinality:** Variant `(1)`  Cart `(N)`
+
+### 5. Product_Variants  Wishlist_Items (The Saves)
+
+* **Entity A:** `Product_Variants` (**Double Rectangle**)
+* **Entity B:** `Wishlist_Items` (**Double Rectangle**)
+* **Relationship:** **Saved_In**
+* **Shape:** **Single-Bordered Diamond**
+* **Cardinality:** Variant `(1)`  Wishlist_Items `(N)`
+
+---
+
+### How to Draw the "Inventory Chain"
+
+This is the most important flow to visualize for logistics. Draw this sequence from Top to Bottom:
+
+> **[Products]**  **[[Product_Variants]]**  **[[Inventory]]**  **[Warehouses]**
+
+1. **Top:** Draw `Products` (Single).
+2. **Middle:** Draw `Product_Variants` (**Double**). Connect to Top with **Double Diamond**.
+3. **Bottom:** Draw `Inventory` (**Double**). Connect to Middle with **Double Diamond**.
+4. **Bottom Right:** Draw `Warehouses` (Single). Connect to Inventory with **Single Diamond** ("Located_In").
+
+This completes the **Product** side of your map. The final piece is the **Order/Payment** cluster. Shall we do that?

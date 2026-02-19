@@ -1,0 +1,309 @@
+/* ====================================================================
+   DBMS PROJECT: AMAZON CLONE (ENTERPRISE EDITION)
+   STATUS: VERIFIED FINAL
+   MODULES: Users, Logistics, Catalog, Variants, Cart, Orders, 
+            Payments, Media, Social, Returns.
+   ==================================================================== */
+
+-- [SECTION 0] RESET DATABASE
+-- "Nuclear Option": Drops tables in reverse dependency order to prevent errors.
+DROP TABLE IF EXISTS Returns CASCADE;
+DROP TABLE IF EXISTS Shipments CASCADE;
+DROP TABLE IF EXISTS Payments CASCADE;
+DROP TABLE IF EXISTS Order_Items CASCADE;
+DROP TABLE IF EXISTS Orders CASCADE;
+DROP TABLE IF EXISTS Cart CASCADE;
+DROP TABLE IF EXISTS Wishlists CASCADE;
+DROP TABLE IF EXISTS Browsing_History CASCADE;
+DROP TABLE IF EXISTS Product_Answers CASCADE;
+DROP TABLE IF EXISTS Product_Questions CASCADE;
+DROP TABLE IF EXISTS Reviews CASCADE;
+DROP TABLE IF EXISTS Product_Media CASCADE;
+DROP TABLE IF EXISTS Product_Specifications CASCADE;
+DROP TABLE IF EXISTS Inventory CASCADE;
+DROP TABLE IF EXISTS Product_Variants CASCADE;
+DROP TABLE IF EXISTS Products CASCADE;
+DROP TABLE IF EXISTS Sellers CASCADE;
+DROP TABLE IF EXISTS Discounts CASCADE;
+DROP TABLE IF EXISTS Addresses CASCADE;
+DROP TABLE IF EXISTS Users CASCADE;
+DROP TABLE IF EXISTS Categories CASCADE;
+DROP TABLE IF EXISTS Warehouses CASCADE;
+
+-- ====================================================================
+-- [SECTION 1] INFRASTRUCTURE & REFERENCE DATA (Level 0)
+-- These tables exist independently.
+-- ====================================================================
+
+CREATE TABLE Warehouses (
+    warehouse_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    street_address VARCHAR(255) NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    zip_code VARCHAR(20),
+    capacity INTEGER CHECK (capacity >= 0),
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE Categories (
+    category_id SERIAL PRIMARY KEY,
+    parent_id INTEGER REFERENCES Categories(category_id), -- Logic: "Laptops" is a child of "Electronics"
+    name VARCHAR(100) NOT NULL,
+    description TEXT
+);
+
+CREATE TABLE Sellers (
+    seller_id SERIAL PRIMARY KEY,
+    company_name VARCHAR(150) NOT NULL,
+    contact_email VARCHAR(150) UNIQUE NOT NULL,
+    gst_number VARCHAR(50),
+    rating DECIMAL(3, 2) DEFAULT 0.00 -- Seller rating (0.00 to 5.00)
+);
+
+CREATE TABLE Discounts (
+    discount_id SERIAL PRIMARY KEY,
+    code VARCHAR(50) UNIQUE NOT NULL,
+    discount_type VARCHAR(20) CHECK (discount_type IN ('percentage', 'fixed')),
+    value DECIMAL(10, 2) NOT NULL,
+    min_order_value DECIMAL(10, 2) DEFAULT 0,
+    valid_until TIMESTAMP,
+    usage_limit INTEGER
+);
+
+-- ====================================================================
+-- [SECTION 2] CORE ENTITIES (Level 1)
+-- Depends on Level 0.
+-- ====================================================================
+
+CREATE TABLE Users (
+    user_id SERIAL PRIMARY KEY,
+    full_name VARCHAR(100) NOT NULL,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    phone_number VARCHAR(20),
+    is_prime BOOLEAN DEFAULT FALSE, -- Subscription Logic
+    prime_expiry_date DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    -- LOGISTICS: Links user to nearest fulfillment center
+    nearby_warehouse_id INTEGER REFERENCES Warehouses(warehouse_id)
+);
+
+CREATE TABLE Products (
+    product_id SERIAL PRIMARY KEY,
+    seller_id INTEGER REFERENCES Sellers(seller_id) ON DELETE CASCADE,
+    category_id INTEGER REFERENCES Categories(category_id) ON DELETE SET NULL,
+    title VARCHAR(255) NOT NULL,
+    brand VARCHAR(100),
+    description TEXT,
+    base_price DECIMAL(10, 2) NOT NULL, -- Price before variations
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ====================================================================
+-- [SECTION 3] PRODUCT DETAILS & VARIATIONS (Level 2)
+-- The "Amazon Detail Page" Logic.
+-- ====================================================================
+
+-- Handles: "Size: M, Color: Red" vs "Size: L, Color: Blue"
+CREATE TABLE Product_Variants (
+    variant_id SERIAL PRIMARY KEY,
+    product_id INTEGER REFERENCES Products(product_id) ON DELETE CASCADE,
+    sku VARCHAR(100) UNIQUE NOT NULL, -- Barcode/Stock ID
+    attributes JSONB, -- Stores {"Color": "Red", "Size": "M"} flexibly
+    price_adjustment DECIMAL(10, 2) DEFAULT 0.00, -- e.g. +$10 for XL size
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE Product_Media (
+    media_id SERIAL PRIMARY KEY,
+    product_id INTEGER REFERENCES Products(product_id) ON DELETE CASCADE,
+    media_url VARCHAR(500) NOT NULL,
+    media_type VARCHAR(20) DEFAULT 'image', -- image, video, 360_view
+    is_primary BOOLEAN DEFAULT FALSE,
+    display_order INTEGER DEFAULT 0
+);
+
+CREATE TABLE Product_Specifications (
+    spec_id SERIAL PRIMARY KEY,
+    product_id INTEGER REFERENCES Products(product_id) ON DELETE CASCADE,
+    spec_key VARCHAR(100) NOT NULL, -- e.g. "Processor"
+    spec_value VARCHAR(255) NOT NULL -- e.g. "Intel i9"
+);
+
+-- ====================================================================
+-- [SECTION 4] USER DATA & LOGISTICS (Level 2)
+-- ====================================================================
+
+CREATE TABLE Addresses (
+    address_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES Users(user_id) ON DELETE CASCADE,
+    address_type VARCHAR(20) DEFAULT 'Home',
+    street_address TEXT NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    zip_code VARCHAR(20) NOT NULL,
+    country VARCHAR(50) DEFAULT 'Bangladesh',
+    is_default BOOLEAN DEFAULT FALSE
+);
+
+-- INVENTORY: Links specific Product Variants to specific Warehouses
+CREATE TABLE Inventory (
+    inventory_id SERIAL PRIMARY KEY,
+    variant_id INTEGER REFERENCES Product_Variants(variant_id) ON DELETE CASCADE,
+    warehouse_id INTEGER REFERENCES Warehouses(warehouse_id) ON DELETE CASCADE,
+    stock_quantity INTEGER NOT NULL CHECK (stock_quantity >= 0),
+    restock_threshold INTEGER DEFAULT 10, -- Alert when stock is low
+    UNIQUE(variant_id, warehouse_id)
+);
+
+-- ====================================================================
+-- [SECTION 5] SHOPPING & ENGAGEMENT (Level 3)
+-- ====================================================================
+
+CREATE TABLE Cart (
+    cart_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES Users(user_id) ON DELETE CASCADE,
+    variant_id INTEGER REFERENCES Product_Variants(variant_id) ON DELETE CASCADE,
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Wishlists (
+    wishlist_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES Users(user_id) ON DELETE CASCADE,
+    product_id INTEGER REFERENCES Products(product_id) ON DELETE CASCADE,
+    added_at DATE DEFAULT CURRENT_DATE
+);
+
+CREATE TABLE Reviews (
+    review_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES Users(user_id) ON DELETE CASCADE,
+    product_id INTEGER REFERENCES Products(product_id) ON DELETE CASCADE,
+    rating INTEGER CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT,
+    images JSONB, -- Users can upload photos of review
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Product_Questions (
+    question_id SERIAL PRIMARY KEY,
+    product_id INTEGER REFERENCES Products(product_id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES Users(user_id) ON DELETE SET NULL,
+    question_text TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Product_Answers (
+    answer_id SERIAL PRIMARY KEY,
+    question_id INTEGER REFERENCES Product_Questions(question_id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES Users(user_id),
+    answer_text TEXT NOT NULL,
+    is_seller_response BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE Browsing_History (
+    history_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES Users(user_id) ON DELETE CASCADE,
+    product_id INTEGER REFERENCES Products(product_id) ON DELETE CASCADE,
+    viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ====================================================================
+-- [SECTION 6] TRANSACTIONS (Level 4)
+-- The most dependent tables.
+-- ====================================================================
+
+CREATE TABLE Orders (
+    order_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES Users(user_id),
+    address_id INTEGER REFERENCES Addresses(address_id),
+    discount_id INTEGER REFERENCES Discounts(discount_id),
+    status VARCHAR(50) DEFAULT 'Pending', -- Pending, Shipped, Delivered, Cancelled
+    total_amount DECIMAL(10, 2) NOT NULL,
+    order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Order_Items (
+    item_id SERIAL PRIMARY KEY,
+    order_id INTEGER REFERENCES Orders(order_id) ON DELETE CASCADE,
+    variant_id INTEGER REFERENCES Product_Variants(variant_id),
+    quantity INTEGER NOT NULL,
+    price_at_purchase DECIMAL(10, 2) NOT NULL -- Snapshot of price (essential for audit)
+);
+
+CREATE TABLE Payments (
+    payment_id SERIAL PRIMARY KEY,
+    order_id INTEGER REFERENCES Orders(order_id) ON DELETE CASCADE,
+    payment_method VARCHAR(50) NOT NULL, -- Credit Card, BKash, COD
+    transaction_id VARCHAR(100), -- From Stripe/SSLCommerz
+    status VARCHAR(50) DEFAULT 'Success',
+    amount DECIMAL(10, 2) NOT NULL,
+    payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Shipments (
+    shipment_id SERIAL PRIMARY KEY,
+    order_id INTEGER REFERENCES Orders(order_id) ON DELETE CASCADE,
+    tracking_number VARCHAR(100),
+    carrier VARCHAR(50), -- DHL, Pathao, Paperfly
+    estimated_arrival DATE,
+    status VARCHAR(50) DEFAULT 'Processing'
+);
+
+CREATE TABLE Returns (
+    return_id SERIAL PRIMARY KEY,
+    order_id INTEGER REFERENCES Orders(order_id),
+    reason VARCHAR(255),
+    status VARCHAR(50) DEFAULT 'Requested', -- Requested, Approved, Refunded
+    refund_amount DECIMAL(10, 2)
+);
+
+-- ====================================================================
+-- [SECTION 7] VERIFICATION DATA (DUMMY DATA)
+-- Essential to prove "Database Connection" for the evaluation.
+-- ====================================================================
+
+-- 1. Warehouses (IDs 101, 102)
+INSERT INTO Warehouses (warehouse_id, name, street_address, city, zip_code, capacity) VALUES
+(101, 'Dhaka North Hub', 'Sector 11, Uttara', 'Dhaka', '1230', 50000),
+(102, 'Chittagong Port Hub', 'Agrabad Access Rd', 'Chittagong', '4000', 80000);
+
+-- 2. Categories
+INSERT INTO Categories (name, description) VALUES 
+('Electronics', 'Gadgets and Computers'),
+('Fashion', 'Clothing and Apparel');
+
+-- 3. Sellers
+INSERT INTO Sellers (company_name, contact_email, rating) VALUES 
+('Official Apple Store', 'contact@apple.com', 4.9),
+('Fashion World BD', 'sales@fashionbd.com', 4.5);
+
+-- 4. Users (Partho & Shuvo)
+INSERT INTO Users (full_name, email, password_hash, phone_number, nearby_warehouse_id, is_prime) VALUES
+('Partho Sarker', 'partho@gmail.com', 'hash_secure_1', '01307270652', 101, TRUE),
+('Shuvo Ahmed', 'shuvo@gmail.com', 'hash_secure_2', '01637774161', 102, FALSE);
+
+-- 5. Products & Variants (The MacBook)
+INSERT INTO Products (title, base_price, category_id, seller_id) VALUES
+('MacBook Pro M3', 150000.00, 1, 1);
+
+-- Variants (Silver vs Space Grey)
+INSERT INTO Product_Variants (product_id, sku, attributes, price_adjustment) VALUES
+(1, 'MBP-M3-SILVER', '{"Color": "Silver", "RAM": "16GB"}', 0),
+(1, 'MBP-M3-GREY', '{"Color": "Space Grey", "RAM": "16GB"}', 0);
+
+-- 6. Inventory (Stock for the Variants)
+INSERT INTO Inventory (variant_id, warehouse_id, stock_quantity) VALUES
+(1, 101, 50), -- 50 Silver MacBooks in Dhaka
+(2, 102, 30); -- 30 Grey MacBooks in Chittagong
+
+-- 7. Address
+INSERT INTO Addresses (user_id, street_address, city, zip_code) VALUES
+(1, 'House 12, Road 5', 'Dhaka', '1230');
+
+-- 8. Order (Proof of Concept)
+INSERT INTO Orders (user_id, address_id, total_amount, status) VALUES
+(1, 1, 150000.00, 'Delivered');
+
+-- 9. Product Media (Images)
+INSERT INTO Product_Media (product_id, media_url, is_primary) VALUES
+(1, 'https://amazon.com/macbook-front.jpg', TRUE);

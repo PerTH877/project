@@ -1,0 +1,226 @@
+
+DROP TABLE IF EXISTS Shipments CASCADE;
+DROP TABLE IF EXISTS Payments CASCADE;
+DROP TABLE IF EXISTS Reviews CASCADE;
+DROP TABLE IF EXISTS Wishlists CASCADE;
+DROP TABLE IF EXISTS Order_Items CASCADE;
+DROP TABLE IF EXISTS Orders CASCADE;
+DROP TABLE IF EXISTS Cart CASCADE;
+DROP TABLE IF EXISTS Inventory CASCADE;
+DROP TABLE IF EXISTS Products CASCADE;
+DROP TABLE IF EXISTS Delivery_Men CASCADE;
+DROP TABLE IF EXISTS Addresses CASCADE;
+DROP TABLE IF EXISTS Users CASCADE;
+DROP TABLE IF EXISTS Discounts CASCADE;
+DROP TABLE IF EXISTS Sellers CASCADE;
+DROP TABLE IF EXISTS Categories CASCADE;
+DROP TABLE IF EXISTS Warehouses CASCADE;
+
+-- ==========================================
+-- [SECTION 1] INDEPENDENT INFRASTRUCTURE (Level 0)
+-- These tables do not depend on any others.
+-- ==========================================
+
+CREATE TABLE Warehouses (
+    warehouse_id SERIAL PRIMARY KEY, -- We will force IDs 101, 102 later
+    name VARCHAR(100) NOT NULL,
+    street_address VARCHAR(255) NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    zip_code VARCHAR(20),
+    capacity INTEGER CHECK (capacity >= 0)
+);
+
+CREATE TABLE Categories (
+    category_id SERIAL PRIMARY KEY,
+    parent_id INTEGER REFERENCES Categories(category_id), -- Self-referencing (e.g., Electronics -> Laptops)
+    name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Sellers (
+    seller_id SERIAL PRIMARY KEY,
+    company_name VARCHAR(150) NOT NULL,
+    contact_email VARCHAR(150) UNIQUE NOT NULL,
+    gst_number VARCHAR(50),
+    description TEXT
+);
+
+CREATE TABLE Discounts (
+    discount_id SERIAL PRIMARY KEY,
+    code VARCHAR(50) UNIQUE NOT NULL,
+    description VARCHAR(255),
+    discount_type VARCHAR(20) CHECK (discount_type IN ('percentage', 'fixed')),
+    value DECIMAL(10, 2) NOT NULL,
+    min_order_value DECIMAL(10, 2) DEFAULT 0,
+    start_date TIMESTAMP,
+    end_date TIMESTAMP,
+    usage_limit INTEGER,
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+-- ==========================================
+-- [SECTION 2] FIRST-LEVEL DEPENDENCIES (Level 1)
+-- These depend on Level 0 tables.
+-- ==========================================
+
+CREATE TABLE Users (
+    user_id SERIAL PRIMARY KEY,
+    full_name VARCHAR(100) NOT NULL,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    phone_number VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    -- LOGISTICS LINK:
+    nearby_warehouse_id INTEGER REFERENCES Warehouses(warehouse_id)
+);
+
+CREATE TABLE Products (
+    product_id SERIAL PRIMARY KEY,
+    seller_id INTEGER REFERENCES Sellers(seller_id) ON DELETE CASCADE,
+    category_id INTEGER REFERENCES Categories(category_id) ON DELETE SET NULL,
+    name VARCHAR(200) NOT NULL,
+    description TEXT,
+    price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
+    image_url VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Delivery_Men (
+    deliveryman_id SERIAL PRIMARY KEY,
+    full_name VARCHAR(100) NOT NULL,
+    phone_number VARCHAR(20),
+    vehicle_type VARCHAR(50), -- e.g., Bike, Truck
+    status VARCHAR(20) DEFAULT 'Available', -- Available, On_Route
+    warehouse_id INTEGER REFERENCES Warehouses(warehouse_id)
+);
+
+-- ==========================================
+-- [SECTION 3] SECOND-LEVEL DEPENDENCIES (Level 2)
+-- These depend on Level 1 (Users, Products).
+-- ==========================================
+
+CREATE TABLE Addresses (
+    address_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES Users(user_id) ON DELETE CASCADE,
+    street_address TEXT NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    zip_code VARCHAR(20),
+    country VARCHAR(50) DEFAULT 'Bangladesh',
+    is_default BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE Inventory (
+    inventory_id SERIAL PRIMARY KEY,
+    product_id INTEGER REFERENCES Products(product_id) ON DELETE CASCADE,
+    warehouse_id INTEGER REFERENCES Warehouses(warehouse_id) ON DELETE CASCADE,
+    stock_quantity INTEGER NOT NULL DEFAULT 0 CHECK (stock_quantity >= 0),
+    UNIQUE(product_id, warehouse_id) -- Prevent duplicate entries for same product in same warehouse
+);
+
+CREATE TABLE Cart (
+    cart_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES Users(user_id) ON DELETE CASCADE,
+    product_id INTEGER REFERENCES Products(product_id) ON DELETE CASCADE,
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Wishlists (
+    wishlist_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES Users(user_id) ON DELETE CASCADE,
+    product_id INTEGER REFERENCES Products(product_id) ON DELETE CASCADE,
+    added_date DATE DEFAULT CURRENT_DATE
+);
+
+CREATE TABLE Reviews (
+    review_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES Users(user_id) ON DELETE CASCADE,
+    product_id INTEGER REFERENCES Products(product_id) ON DELETE CASCADE,
+    rating INTEGER CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT,
+    review_date DATE DEFAULT CURRENT_DATE
+);
+
+-- ==========================================
+-- [SECTION 4] THIRD-LEVEL DEPENDENCIES (Level 3)
+-- These are the core Transaction tables.
+-- ==========================================
+
+CREATE TABLE Orders (
+    order_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES Users(user_id),
+    address_id INTEGER REFERENCES Addresses(address_id),
+    discount_id INTEGER REFERENCES Discounts(discount_id),
+    status VARCHAR(50) DEFAULT 'Pending', -- Pending, Processing, Shipped, Delivered
+    total_amount DECIMAL(10, 2) NOT NULL,
+    discount_amount DECIMAL(10, 2) DEFAULT 0,
+    order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==========================================
+-- [SECTION 5] FINAL LEVEL (Level 4)
+-- Details regarding specific orders.
+-- ==========================================
+
+CREATE TABLE Order_Items (
+    item_id SERIAL PRIMARY KEY,
+    order_id INTEGER REFERENCES Orders(order_id) ON DELETE CASCADE,
+    product_id INTEGER REFERENCES Products(product_id),
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    price_at_purchase DECIMAL(10, 2) NOT NULL -- Snapshot of price
+);
+
+CREATE TABLE Payments (
+    payment_id SERIAL PRIMARY KEY,
+    order_id INTEGER REFERENCES Orders(order_id) ON DELETE CASCADE,
+    payment_method VARCHAR(50), -- Credit Card, BKash, COD
+    transaction_id VARCHAR(100),
+    transaction_status VARCHAR(50) DEFAULT 'Pending',
+    amount DECIMAL(10, 2) NOT NULL,
+    payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Shipments (
+    shipment_id SERIAL PRIMARY KEY,
+    order_id INTEGER REFERENCES Orders(order_id) ON DELETE CASCADE,
+    delivery_man_id INTEGER REFERENCES Delivery_Men(deliveryman_id),
+    courier_name VARCHAR(100) DEFAULT 'Own Fleet',
+    tracking_number VARCHAR(100) UNIQUE,
+    status VARCHAR(50) DEFAULT 'Preparing',
+    estimated_delivery DATE
+);
+
+
+-- ==========================================
+-- [SECTION 6] DUMMY DATA INSERTION
+-- Ordered strictly to avoid Foreign Key errors.
+-- ==========================================
+
+-- 1. Warehouses (Using explicit IDs 101, 102 to match your User data)
+INSERT INTO Warehouses (warehouse_id, name, street_address, city, zip_code, capacity) VALUES
+(101, 'Dhaka North Hub', 'Sector 10, Uttara', 'Dhaka', '1230', 50000),
+(102, 'Dhaka South Hub', 'Dhanmondi 27', 'Dhaka', '1209', 40000);
+
+-- 2. Categories & Sellers
+INSERT INTO Categories (name) VALUES ('Electronics'), ('Books');
+INSERT INTO Sellers (company_name, contact_email) VALUES ('TechWorld BD', 'sales@techworld.com');
+
+-- 3. Users (Your Provided Data)
+INSERT INTO Users (full_name, email, password_hash, phone_number, nearby_warehouse_id) VALUES
+('Partho Sarker', 'partho@gmail.com', 'pass1', '01307270652', 101),
+('Shuvo Ahmed', 'shuvo@gmail.com', 'pass2', '01637774161', 102);
+
+-- 4. Products & Inventory
+INSERT INTO Products (seller_id, category_id, name, price) VALUES
+(1, 1, 'Gaming Laptop', 120000.00),
+(1, 2, 'System Design Interview', 2500.00);
+
+-- Inventory: 10 Laptops in Warehouse 101
+INSERT INTO Inventory (product_id, warehouse_id, stock_quantity) VALUES (1, 101, 10);
+
+-- 5. Addresses
+INSERT INTO Addresses (user_id, street_address, city, zip_code) VALUES
+(1, 'House 5, Road 10', 'Dhaka', '1230');
+
+-- 6. Orders (To prove connection for Evaluation)
+INSERT INTO Orders (user_id, address_id, total_amount, status) VALUES
+(1, 1, 120000.00, 'Pending');
