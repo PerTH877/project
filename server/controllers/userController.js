@@ -8,7 +8,7 @@ const registerUser = async (req , res) => {
             return res.status(401).json("User already exists");
         }
         const newUser = await pool.query(
-            `insert into Users (full_name, email, password_hash, phone number, nearby_warehouse_id)
+            `insert into Users (full_name, email, password_hash, phone_number, nearby_warehouse_id)
             values ($1,$2,$3,$4,$5)
             returning *`,
             [full_name, email, password_hash, phone_number, nearby_warehouse_id]
