@@ -6,6 +6,8 @@ const pool = require('./config/db');
 const warehouseRoutes = require('./routes/warehouseRoutes');
 const userRoutes = require('./routes/userRoutes');
 const sellerRoutes = require('./routes/sellerRoutes');
+const productRoutes = require('./routes/productRoutes');
+
 
 
 const app = express();
@@ -16,6 +18,7 @@ app.use(express.json());
 app.use('/api/warehouses', warehouseRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/sellers', sellerRoutes);
+app.use('/api/products',productRoutes);
 
 
 

@@ -2,32 +2,48 @@ const pool = require('../config/db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
+
 const registerUser = async (req, res) => {
-  const { full_name, email, password_hash, phone_number, nearby_warehouse_id } = req.body;
+  const { full_name, email, password, phone_number, nearby_warehouse_id } = req.body;
 
   try {
-    const userCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-
-    if (userCheck.rows.length > 0) {
-      return res.status(401).json("User already exists");
+    if (!full_name || !email || !password) {
+      return res.status(400).json({ error: "full_name, email, and password are required" });
     }
 
-    // hash password
-    const saltRounds = 10;
-    const salt = await bcrypt.genSalt(saltRounds);
-    const bcryptPassword = await bcrypt.hash(password_hash, salt);
+    const normalizedEmail = normalizeEmail(email);
 
-    const newUser = await pool.query(
-      `INSERT INTO Users (full_name, email, password_hash, phone_number, nearby_warehouse_id)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING user_id, full_name, email, phone_number, nearby_warehouse_id`,
-      [full_name, email, bcryptPassword, phone_number, nearby_warehouse_id]
+    const userCheck = await pool.query(
+      'SELECT user_id FROM users WHERE email = $1',
+      [normalizedEmail]
     );
 
-    res.status(201).json({ message: "User registered securely", user: newUser.rows[0] });
+    if (userCheck.rows.length > 0) {
+      return res.status(409).json({ error: "User already exists" });
+    }
+
+    const password_hash = await bcrypt.hash(password, 10);
+
+    const newUser = await pool.query(
+      `INSERT INTO users (full_name, email, password_hash, phone_number, nearby_warehouse_id)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING user_id, full_name, email, phone_number, nearby_warehouse_id`,
+      [full_name.trim(), normalizedEmail, password_hash, phone_number || null, nearby_warehouse_id || null]
+    );
+
+    return res.status(201).json({
+      message: "User registered securely",
+      user: newUser.rows[0],
+    });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server Error");
+    console.error("Register User Error:", err.message);
+
+    if (err.code === "23505") {
+      return res.status(409).json({ error: "User already exists" });
+    }
+
+    return res.status(500).send("Server Error");
   }
 };
 
@@ -35,32 +51,36 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // verify user existence
-    const user = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+    if (!email || !password) {
+      return res.status(400).json({ error: "email and password are required" });
+    }
+
+    const normalizedEmail = normalizeEmail(email);
+
+    const user = await pool.query(
+      'SELECT user_id, email, password_hash FROM users WHERE email = $1',
+      [normalizedEmail]
+    );
 
     if (user.rows.length === 0) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    // password match
     const validPassword = await bcrypt.compare(password, user.rows[0].password_hash);
-
     if (!validPassword) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    // jwt token
     const token = jwt.sign(
-      { user_id: user.rows[0].user_id },
+      { user_id: user.rows[0].user_id, role: "user" },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-    res.json({ token });
-
+    return res.json({ token });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server Error");
+    console.error("Login User Error:", err.message);
+    return res.status(500).send("Server Error");
   }
 };
 

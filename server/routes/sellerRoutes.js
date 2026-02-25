@@ -1,7 +1,8 @@
 const router = require('express').Router();
-const { registerSeller } = require('../controllers/sellerController');
+const { registerSeller ,loginSeller } = require('../controllers/sellerController');
 
-// Define what happens when a POST request hits /register
 router.post('/register', registerSeller);
+router.post('/login',loginSeller);
+
 
 module.exports = router;
