@@ -7,6 +7,7 @@ const warehouseRoutes = require('./routes/warehouseRoutes');
 const userRoutes = require('./routes/userRoutes');
 const sellerRoutes = require('./routes/sellerRoutes');
 const productRoutes = require('./routes/productRoutes');
+const adminRoutes = require("./routes/adminRoutes");
 
 
 
@@ -19,6 +20,7 @@ app.use('/api/warehouses', warehouseRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/sellers', sellerRoutes);
 app.use('/api/products',productRoutes);
+app.use("/api/admin", adminRoutes);
 
 
 
