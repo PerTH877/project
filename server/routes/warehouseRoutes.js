@@ -1,8 +1,8 @@
 const router = require('express').Router();
 const { getAllWarehouses, createWarehouse } = require('../controllers/warehouseController');
+const { authMiddleware, requireRole } = require("../middleware/authMiddleware");
 
-// Define what happens when a specific HTTP method hits '/'
 router.get('/', getAllWarehouses);
-router.post('/', createWarehouse);
+router.post('/', authMiddleware, requireRole("admin"), createWarehouse);
 
 module.exports = router;

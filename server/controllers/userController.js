@@ -8,12 +8,20 @@ const registerUser = async (req, res) => {
   const { full_name, email, password, phone_number, nearby_warehouse_id } = req.body;
 
   try {
-    if (!full_name || !email || !password) {
-      return res.status(400).json({ error: "full_name, email, and password are required" });
+    // Validate required fields
+    if (!full_name || typeof full_name !== 'string' || full_name.trim().length === 0) {
+      return res.status(400).json({ error: "full_name is required and must be a non-empty string" });
+    }
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ error: "email is required and must be a string" });
+    }
+    if (!password || typeof password !== 'string') {
+      return res.status(400).json({ error: "password is required and must be a string" });
     }
 
     const normalizedEmail = normalizeEmail(email);
 
+    // Check for existing user
     const userCheck = await pool.query(
       'SELECT user_id FROM users WHERE email = $1',
       [normalizedEmail]
@@ -25,11 +33,21 @@ const registerUser = async (req, res) => {
 
     const password_hash = await bcrypt.hash(password, 10);
 
+    // Validate nearby_warehouse_id if provided – must be a positive integer
+    let warehouseIdParam = null;
+    if (nearby_warehouse_id !== undefined && nearby_warehouse_id !== null) {
+      const wid = Number(nearby_warehouse_id);
+      if (!Number.isInteger(wid) || wid <= 0) {
+        return res.status(400).json({ error: "nearby_warehouse_id must be a positive integer" });
+      }
+      warehouseIdParam = wid;
+    }
+
     const newUser = await pool.query(
       `INSERT INTO users (full_name, email, password_hash, phone_number, nearby_warehouse_id)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING user_id, full_name, email, phone_number, nearby_warehouse_id`,
-      [full_name.trim(), normalizedEmail, password_hash, phone_number || null, nearby_warehouse_id || null]
+      [full_name.trim(), normalizedEmail, password_hash, phone_number || null, warehouseIdParam]
     );
 
     return res.status(201).json({
@@ -42,6 +60,9 @@ const registerUser = async (req, res) => {
     if (err.code === "23505") {
       return res.status(409).json({ error: "User already exists" });
     }
+    if (err.code === "23503") {
+       return res.status(400).json({ error: "Invalid nearby_warehouse_id" });
+    }
 
     return res.status(500).send("Server Error");
   }
@@ -51,8 +72,11 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ error: "email and password are required" });
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ error: "email is required and must be a string" });
+    }
+    if (!password || typeof password !== 'string') {
+      return res.status(400).json({ error: "password is required and must be a string" });
     }
 
     const normalizedEmail = normalizeEmail(email);

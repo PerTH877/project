@@ -8,9 +8,15 @@ const registerSeller = async (req, res) => {
   const { company_name, contact_email, password, gst_number } = req.body;
 
   try {
-    // Validation
-    if (!company_name || !contact_email || !password) {
-      return res.status(400).json({ error: "company_name, contact_email, and password are required" });
+    // Validation: ensure required fields are non-empty strings
+    if (!company_name || typeof company_name !== 'string' || company_name.trim().length === 0) {
+      return res.status(400).json({ error: "company_name is required and must be a non-empty string" });
+    }
+    if (!contact_email || typeof contact_email !== 'string') {
+      return res.status(400).json({ error: "contact_email is required and must be a string" });
+    }
+    if (!password || typeof password !== 'string') {
+      return res.status(400).json({ error: "password is required and must be a string" });
     }
 
     const email = normalizeEmail(contact_email);
@@ -50,14 +56,15 @@ const registerSeller = async (req, res) => {
   }
 };
 
-
-
 const loginSeller = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ error: "email and password are required" });
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ error: "email is required and must be a string" });
+    }
+    if (!password || typeof password !== 'string') {
+      return res.status(400).json({ error: "password is required and must be a string" });
     }
 
     const normalized = normalizeEmail(email);
