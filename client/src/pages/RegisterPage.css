@@ -1,0 +1,370 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* ==================== PAGE ==================== */
+.register-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', sans-serif;
+    padding: 2rem 1rem;
+}
+
+.customer-register-page {
+    background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+}
+
+.seller-register-page {
+    background: linear-gradient(135deg, #0c1a45 0%, #0d4377 50%, #051937 100%);
+}
+
+/* ==================== CARD ==================== */
+.register-card {
+    display: flex;
+    width: 100%;
+    max-width: 920px;
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6);
+    animation: fadeInUp 0.4s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==================== ACCENT PANEL ==================== */
+.register-accent {
+    width: 300px;
+    flex-shrink: 0;
+    padding: 3rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+}
+
+.customer-accent {
+    background: linear-gradient(160deg, #7c3aed 0%, #4f46e5 60%, #312e81 100%);
+}
+
+.seller-accent {
+    background: linear-gradient(160deg, #0ea5e9 0%, #0284c7 60%, #0c4a6e 100%);
+}
+
+.accent-content {
+    text-align: center;
+}
+
+.accent-icon {
+    font-size: 3.5rem;
+    display: block;
+    margin-bottom: 1.2rem;
+}
+
+.accent-content h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 0.8rem;
+    line-height: 1.2;
+}
+
+.accent-content p {
+    font-size: 0.85rem;
+    opacity: 0.8;
+    line-height: 1.6;
+    margin-bottom: 1.4rem;
+}
+
+.accent-perks {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    text-align: left;
+}
+
+.accent-perks li {
+    font-size: 0.83rem;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+/* ==================== FORM PANEL ==================== */
+.register-form-panel {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: none;
+    padding: 2.8rem 2.5rem;
+    color: #fff;
+    overflow-y: auto;
+}
+
+/* ==================== HEADER ==================== */
+.register-header {
+    margin-bottom: 1.6rem;
+}
+
+.register-badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.9rem;
+    border-radius: 999px;
+    margin-bottom: 0.8rem;
+}
+
+.register-badge.customer-badge {
+    background: linear-gradient(90deg, #7c3aed, #4f46e5);
+}
+
+.register-badge.seller-badge {
+    background: linear-gradient(90deg, #0ea5e9, #06b6d4);
+}
+
+.register-title {
+    font-size: 1.7rem;
+    font-weight: 800;
+    margin-bottom: 0.3rem;
+}
+
+.register-subtitle {
+    font-size: 0.83rem;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+/* ==================== ERROR ==================== */
+.reg-error-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+    margin-bottom: 1.2rem;
+    animation: shake 0.35s ease;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    20% {
+        transform: translateX(-6px);
+    }
+
+    60% {
+        transform: translateX(6px);
+    }
+}
+
+/* ==================== FORM FIELDS ==================== */
+.register-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.reg-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.reg-form-group label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.65);
+    letter-spacing: 0.04em;
+}
+
+.reg-input-wrapper {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+    padding: 0 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.reg-input-wrapper:focus-within {
+    border-color: rgba(167, 139, 250, 0.7);
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.12);
+}
+
+.reg-input-icon {
+    font-size: 0.9rem;
+    margin-right: 0.55rem;
+    opacity: 0.65;
+}
+
+.reg-input-wrapper input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-size: 0.88rem;
+    font-family: 'Inter', sans-serif;
+    padding: 0.82rem 0;
+}
+
+.reg-input-wrapper input::placeholder {
+    color: rgba(255, 255, 255, 0.28);
+}
+
+/* ==================== BUTTON ==================== */
+.reg-submit-btn {
+    width: 100%;
+    padding: 0.9rem;
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    margin-top: 0.6rem;
+    letter-spacing: 0.02em;
+    transition: opacity 0.2s, transform 0.2s;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+}
+
+.reg-submit-btn:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.reg-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.customer-submit-btn {
+    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+}
+
+.seller-submit-btn {
+    background: linear-gradient(135deg, #0ea5e9, #0284c7);
+}
+
+/* ==================== SPINNER ==================== */
+.btn-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+}
+
+.reg-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ==================== LOGIN LINK ==================== */
+.reg-login-link {
+    text-align: center;
+    margin-top: 1.2rem;
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.reg-login-link a {
+    color: #a78bfa;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.reg-login-link a:hover {
+    text-decoration: underline;
+}
+
+/* ==================== SUCCESS PANEL ==================== */
+.reg-success-panel {
+    text-align: center;
+    padding: 2rem 0;
+    animation: fadeInUp 0.4s ease;
+}
+
+.success-icon-wrap {
+    margin-bottom: 1rem;
+}
+
+.success-checkmark {
+    font-size: 3.5rem;
+}
+
+.reg-success-panel h3 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.8rem;
+}
+
+.success-message {
+    font-size: 0.88rem;
+    color: rgba(255, 255, 255, 0.65);
+    line-height: 1.7;
+    margin-bottom: 1.6rem;
+}
+
+.success-back-btn {
+    display: inline-block;
+    width: auto !important;
+    padding: 0.75rem 2rem !important;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 720px) {
+    .register-card {
+        flex-direction: column;
+    }
+
+    .register-accent {
+        width: 100%;
+        padding: 2rem 1.5rem;
+    }
+
+    .register-form-panel {
+        padding: 2rem 1.5rem;
+    }
+}
