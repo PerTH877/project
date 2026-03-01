@@ -1,0 +1,263 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ==================== BASE ==================== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+  font-family: 'Inter', sans-serif;
+  color: #fff;
+}
+
+/* ==================== HEADER ==================== */
+.login-header {
+  text-align: center;
+  padding: 2rem 1rem 1rem;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.logo-icon { font-size: 2rem; }
+
+.logo-text {
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(90deg, #a78bfa, #60a5fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-tagline {
+  color: rgba(255,255,255,0.55);
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+}
+
+/* ==================== PORTALS CONTAINER ==================== */
+.portals-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 2rem 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* ==================== PORTAL CARD ==================== */
+.portal {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.portal:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+}
+
+.customer-portal { margin-right: 0.5rem; }
+.seller-portal   { margin-left:  0.5rem; }
+
+/* ==================== PORTAL BADGE ==================== */
+.portal-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+  margin-bottom: 1rem;
+}
+
+.customer-badge { background: linear-gradient(90deg,#7c3aed,#4f46e5); }
+.seller-badge   { background: linear-gradient(90deg,#0ea5e9,#06b6d4); }
+
+/* ==================== PORTAL TEXT ==================== */
+.portal-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.portal-subtitle {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 1.4rem;
+  line-height: 1.5;
+}
+
+/* ==================== ERROR ALERT ==================== */
+.error-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(239,68,68,0.15);
+  border: 1px solid rgba(239,68,68,0.4);
+  color: #fca5a5;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  margin-bottom: 1.2rem;
+  animation: shake 0.35s ease;
+}
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%      { transform: translateX(-6px); }
+  60%      { transform: translateX(6px); }
+}
+
+/* ==================== FORM ==================== */
+.login-form { display: flex; flex-direction: column; gap: 1.1rem; }
+
+.form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.form-group label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 0.03em;
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  padding: 0 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-wrapper:focus-within {
+  border-color: rgba(167,139,250,0.7);
+  box-shadow: 0 0 0 3px rgba(167,139,250,0.15);
+}
+
+.input-icon { font-size: 0.95rem; margin-right: 0.6rem; opacity: 0.7; }
+
+.input-wrapper input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 0.9rem;
+  font-family: 'Inter', sans-serif;
+  padding: 0.85rem 0;
+}
+
+.input-wrapper input::placeholder { color: rgba(255,255,255,0.3); }
+
+/* ==================== BUTTONS ==================== */
+.login-btn {
+  width: 100%;
+  padding: 0.9rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: opacity 0.2s, transform 0.2s;
+  letter-spacing: 0.02em;
+}
+
+.login-btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+.login-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.customer-btn { background: linear-gradient(135deg,#7c3aed,#4f46e5); color: #fff; }
+.seller-btn   { background: linear-gradient(135deg,#0ea5e9,#06b6d4); color: #fff; }
+
+/* ==================== SPINNER ==================== */
+.btn-loading { display: flex; align-items: center; justify-content: center; gap: 0.6rem; }
+
+.spinner {
+  display: inline-block;
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ==================== PORTAL FOOTER LINK ==================== */
+.portal-footer-link {
+  text-align: center;
+  margin-top: 1.2rem;
+  font-size: 0.83rem;
+  color: rgba(255,255,255,0.45);
+}
+
+.portal-footer-link a { color: #a78bfa; font-weight: 600; text-decoration: none; }
+.portal-footer-link a:hover { text-decoration: underline; }
+
+/* ==================== DIVIDER ==================== */
+.portal-divider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1.5rem;
+  gap: 0.6rem;
+  color: rgba(255,255,255,0.35);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  min-height: 200px;
+}
+
+.divider-line {
+  width: 1px;
+  flex: 1;
+  background: rgba(255,255,255,0.12);
+}
+
+/* ==================== FOOTER ==================== */
+.login-footer {
+  text-align: center;
+  padding: 1.5rem 1rem 2rem;
+  color: rgba(255,255,255,0.4);
+  font-size: 0.82rem;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+.admin-link {
+  color: #f59e0b;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.admin-link:hover { color: #fcd34d; text-decoration: underline; }
+
+.footer-copyright { margin-top: 0.5rem; opacity: 0.35; }
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 900px) {
+  .portals-container { flex-direction: column; align-items: center; }
+  .portal-divider { flex-direction: row; min-height: auto; padding: 0.5rem 0; width: 100%; max-width: 420px; }
+  .divider-line { height: 1px; width: auto; flex: 1; }
+  .customer-portal, .seller-portal { margin: 0; }
+}
