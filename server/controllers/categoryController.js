@@ -1,37 +1,41 @@
 const pool = require("../config/db");
 
-// POST /api/categories  (admin)
+
 const createCategory = async (req, res) => {
   const { parent_id = null, name, description = null } = req.body;
-
-  if (!name || typeof name !== "string") {
-    return res.status(400).json({ error: "name is required (string)" });
+  if (!name || typeof name !== 'string') {
+    return res.status(400).json({ error: 'name is required (string)' });
   }
-
+  let client;
   try {
-    // optional: validate parent_id exists
+    client = await pool.connect();
+    await client.query('BEGIN');
     if (parent_id !== null) {
-      const p = await pool.query("SELECT 1 FROM Categories WHERE category_id = $1", [parent_id]);
+      const p = await client.query('SELECT 1 FROM Categories WHERE category_id = $1', [parent_id]);
       if (p.rows.length === 0) {
-        return res.status(400).json({ error: "Invalid parent_id (category not found)" });
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'Invalid parent_id (category not found)' });
       }
     }
-
-    const result = await pool.query(
+    const result = await client.query(
       `INSERT INTO Categories (parent_id, name, description)
        VALUES ($1, $2, $3)
        RETURNING *`,
       [parent_id, name.trim(), description]
     );
-
-    return res.status(201).json({ message: "Category created", category: result.rows[0] });
+    await client.query('COMMIT');
+    return res.status(201).json({ message: 'Category created', category: result.rows[0] });
   } catch (err) {
-    console.error("createCategory:", err.message);
-    return res.status(500).json({ error: "Server error" });
+    if (client) await client.query('ROLLBACK');
+    console.error('createCategory:', err.message);
+    return res.status(500).json({ error: 'Server error' });
+  } finally {
+    if (client) client.release();
   }
 };
 
-// GET /api/categories  (public)
+
+
 const listCategories = async (req, res) => {
   try {
     const result = await pool.query(

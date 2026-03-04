@@ -6,53 +6,49 @@ const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
 
 const registerSeller = async (req, res) => {
   const { company_name, contact_email, password, gst_number } = req.body;
-
+  if (!company_name || typeof company_name !== 'string' || company_name.trim().length === 0) {
+    return res.status(400).json({ error: 'company_name is required and must be a non-empty string' });
+  }
+  if (!contact_email || typeof contact_email !== 'string') {
+    return res.status(400).json({ error: 'contact_email is required and must be a string' });
+  }
+  if (!password || typeof password !== 'string') {
+    return res.status(400).json({ error: 'password is required and must be a string' });
+  }
+  const email = normalizeEmail(contact_email);
+  const password_hash = await bcrypt.hash(password, 10);
+  let client;
   try {
-    // Validation: ensure required fields are non-empty strings
-    if (!company_name || typeof company_name !== 'string' || company_name.trim().length === 0) {
-      return res.status(400).json({ error: "company_name is required and must be a non-empty string" });
-    }
-    if (!contact_email || typeof contact_email !== 'string') {
-      return res.status(400).json({ error: "contact_email is required and must be a string" });
-    }
-    if (!password || typeof password !== 'string') {
-      return res.status(400).json({ error: "password is required and must be a string" });
-    }
-
-    const email = normalizeEmail(contact_email);
-
-    // Check duplicate email
-    const sellerCheck = await pool.query(
+    client = await pool.connect();
+    await client.query('BEGIN');
+    const sellerCheck = await client.query(
       'SELECT seller_id FROM Sellers WHERE contact_email = $1',
       [email]
     );
-
     if (sellerCheck.rows.length > 0) {
-      return res.status(409).json({ error: "A seller with this email already exists" });
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'A seller with this email already exists' });
     }
-
-    // Hash password
-    const password_hash = await bcrypt.hash(password, 10);
-
-    const newSeller = await pool.query(
+    const newSeller = await client.query(
       `INSERT INTO Sellers (company_name, contact_email, password_hash, gst_number)
        VALUES ($1, $2, $3, $4)
        RETURNING seller_id, company_name, contact_email, gst_number, rating, is_verified, balance`,
       [company_name.trim(), email, password_hash, gst_number || null]
     );
-
+    await client.query('COMMIT');
     return res.status(201).json({
-      message: "Seller registered successfully",
+      message: 'Seller registered successfully',
       seller: newSeller.rows[0],
     });
   } catch (err) {
-    console.error("Register Seller Error:", err.message);
-
-    if (err.code === "23505") {
-      return res.status(409).json({ error: "A seller with this email already exists" });
+    if (client) await client.query('ROLLBACK');
+    console.error('Register Seller Error:', err.message);
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'A seller with this email already exists' });
     }
-
-    return res.status(500).send("Server Error");
+    return res.status(500).send('Server Error');
+  } finally {
+    if (client) client.release();
   }
 };
 

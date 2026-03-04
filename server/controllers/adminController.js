@@ -50,28 +50,33 @@ const listPendingSellers = async (req, res) => {
 };
 
 const verifySeller = async (req, res) => {
+  const sellerId = Number(req.params.seller_id);
+  if (!Number.isInteger(sellerId) || sellerId <= 0) {
+    return res.status(400).json({ error: 'seller_id must be a positive integer' });
+  }
+  let client;
   try {
-    const sellerId = Number(req.params.seller_id);
-    if (!Number.isInteger(sellerId) || sellerId <= 0) {
-      return res.status(400).json({ error: "seller_id must be a positive integer" });
-    }
-
-    const updated = await pool.query(
+    client = await pool.connect();
+    await client.query('BEGIN');
+    const updated = await client.query(
       `UPDATE Sellers
        SET is_verified = TRUE
        WHERE seller_id = $1
        RETURNING seller_id, company_name, contact_email, is_verified`,
       [sellerId]
     );
-
     if (updated.rows.length === 0) {
-      return res.status(404).json({ error: "Seller not found" });
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Seller not found' });
     }
-
-    return res.json({ message: "Seller verified", seller: updated.rows[0] });
+    await client.query('COMMIT');
+    return res.json({ message: 'Seller verified', seller: updated.rows[0] });
   } catch (err) {
-    console.error("verifySeller:", err.message);
-    return res.status(500).json({ error: "Server error" });
+    if (client) await client.query('ROLLBACK');
+    console.error('verifySeller:', err.message);
+    return res.status(500).json({ error: 'Server error' });
+  } finally {
+    if (client) client.release();
   }
 };
 

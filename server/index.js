@@ -1,4 +1,3 @@
-// Load env vars from `server/.env` reliably regardless of where Node is started.
 require('./config/env');
 
 const express = require('express');
@@ -11,6 +10,9 @@ const sellerRoutes = require('./routes/sellerRoutes');
 const productRoutes = require('./routes/productRoutes');
 const adminRoutes = require("./routes/adminRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
+const addressRoutes = require('./routes/addressRoutes');
+const cartRoutes = require('./routes/cartRoutes');
+const wishlistRoutes = require('./routes/wishlistRoutes');
 
 const notFound = require('./middleware/notFound');
 const errorHandler = require('./middleware/errorHandler');
@@ -26,6 +28,9 @@ app.use('/api/sellers', sellerRoutes);
 app.use('/api/products', productRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use('/api/addresses', addressRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/wishlists', wishlistRoutes);
 
 app.get('/test-db', async (req, res) => {
   try {
@@ -37,7 +42,6 @@ app.get('/test-db', async (req, res) => {
   }
 });
 
-// 404 + error handlers (keep these at the bottom, after routes)
 app.use(notFound);
 app.use(errorHandler);
 
