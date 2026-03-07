@@ -80,4 +80,92 @@ const verifySeller = async (req, res) => {
   }
 };
 
-module.exports = { adminLogin, listPendingSellers, verifySeller };
+// -----------------------------------------------------------------------------
+// Analytics endpoints for admin.  These handlers return various
+// aggregated statistics across multiple tables.  They use complex SQL
+// queries involving joins, grouping and ordering to satisfy the
+// “complex query” requirements of the project checklist.  Only admins
+// should be able to access these endpoints via adminRoutes.
+
+/**
+ * GET /api/admin/analytics/top-categories
+ * Returns the top 5 categories ranked by the number of products.  The
+ * category name and count of products are returned in descending order.
+ */
+const getTopCategories = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT c.category_id, c.name, COUNT(p.product_id) AS product_count
+       FROM categories c
+       LEFT JOIN products p ON p.category_id = c.category_id
+       GROUP BY c.category_id, c.name
+       ORDER BY product_count DESC, c.name ASC
+       LIMIT 5`
+    );
+    return res.json({ categories: result.rows });
+  } catch (err) {
+    console.error('getTopCategories:', err.message);
+    return res.status(500).json({ error: 'Server error' });
+  }
+};
+
+/**
+ * GET /api/admin/analytics/top-sellers
+ * Returns the top 5 sellers ranked by total sales.  Sales are computed as
+ * the sum of quantity multiplied by unit_price across all order_items for
+ * products sold by a seller.  Sellers with no sales appear with zero.
+ */
+const getTopSellers = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT s.seller_id, s.company_name,
+              COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS total_sales
+       FROM sellers s
+       LEFT JOIN products p ON p.seller_id = s.seller_id
+       LEFT JOIN product_variants pv ON pv.product_id = p.product_id
+       LEFT JOIN order_items oi ON oi.variant_id = pv.variant_id
+       GROUP BY s.seller_id, s.company_name
+       ORDER BY total_sales DESC, s.company_name ASC
+       LIMIT 5`
+    );
+    return res.json({ sellers: result.rows });
+  } catch (err) {
+    console.error('getTopSellers:', err.message);
+    return res.status(500).json({ error: 'Server error' });
+  }
+};
+
+/**
+ * GET /api/admin/analytics/top-products
+ * Returns the top 5 products ranked by popularity, defined as the total
+ * number of times a product's variants appear in carts or wishlist items.
+ */
+const getTopProducts = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT p.product_id, p.title,
+              COALESCE(SUM(CASE WHEN c.cart_id IS NOT NULL THEN 1 ELSE 0 END), 0)
+              + COALESCE(SUM(CASE WHEN wi.item_id IS NOT NULL THEN 1 ELSE 0 END), 0) AS popularity
+       FROM products p
+       LEFT JOIN product_variants pv ON pv.product_id = p.product_id
+       LEFT JOIN cart c ON c.variant_id = pv.variant_id
+       LEFT JOIN wishlist_items wi ON wi.variant_id = pv.variant_id
+       GROUP BY p.product_id, p.title
+       ORDER BY popularity DESC, p.title ASC
+       LIMIT 5`
+    );
+    return res.json({ products: result.rows });
+  } catch (err) {
+    console.error('getTopProducts:', err.message);
+    return res.status(500).json({ error: 'Server error' });
+  }
+};
+
+module.exports = {
+  adminLogin,
+  listPendingSellers,
+  verifySeller,
+  getTopCategories,
+  getTopSellers,
+  getTopProducts,
+};

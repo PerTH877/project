@@ -1,0 +1,1 @@
+export { addressesService } from './cart'

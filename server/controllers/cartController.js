@@ -133,4 +133,77 @@ const removeCartItem = async (req, res) => {
   }
 };
 
-module.exports = { getCartItems, addToCart, updateCartItem, removeCartItem };
+// Exported at the end of the file with all handlers.  Do not add
+// exports here as it will be overridden.
+// -----------------------------------------------------------------------------
+// Additional controller to compute the current total value of the user's cart.
+// This endpoint calls the get_cart_total() function defined in the database.
+// It is separated here so that it can be wired into cartRoutes without
+// duplicating authentication logic.  If the function or table definitions are
+// missing from the database an error is returned.  The response includes a
+// decimal total with two fractional digits.
+
+/**
+ * GET /api/cart/total
+ * Returns the total price of all items in the authenticated user's cart.  The
+ * calculation multiplies the quantity of each item by the sum of the base
+ * price and any price adjustment defined on the variant.  Uses the
+ * get_cart_total(p_user_id) PL/pgSQL function.  Expects authMiddleware to
+ * populate req.user.user_id.  Responds with JSON: { total: <number> }.
+ */
+const getCartTotal = async (req, res) => {
+  const userId = req.user?.user_id;
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    const result = await pool.query('SELECT get_cart_total($1) AS total', [userId]);
+    const total = result.rows[0]?.total ?? 0;
+    return res.json({ total: Number(total) });
+  } catch (err) {
+    console.error('getCartTotal:', err.message);
+    return res.status(500).json({ error: 'Server error computing cart total' });
+  }
+};
+
+/**
+ * POST /api/cart/checkout
+ * Creates an order for the authenticated user using the proc_create_order
+ * stored procedure.  Requires the request body to include an address_id.
+ * If the cart is empty or the address_id is invalid a 400 error is
+ * returned.  On success returns the new order_id and clears the cart.
+ */
+const checkout = async (req, res) => {
+  const userId = req.user?.user_id;
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  const addressId = Number(req.body.address_id);
+  if (!Number.isInteger(addressId) || addressId <= 0) {
+    return res.status(400).json({ error: 'address_id must be a positive integer' });
+  }
+  let client;
+  try {
+    client = await pool.connect();
+    await client.query('BEGIN');
+    const cartCountRes = await client.query('SELECT COUNT(*)::int AS count FROM cart WHERE user_id = $1', [userId]);
+    if (cartCountRes.rows[0].count === 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Cart is empty. Add items before checkout.' });
+    }
+    // Call the stored procedure.  The OUT parameter is ignored; the
+    // procedure handles order creation internally.
+    await client.query('CALL proc_create_order($1, $2, NULL)', [userId, addressId]);
+    const orderRes = await client.query(
+      'SELECT order_id FROM orders WHERE user_id = $1 ORDER BY order_id DESC LIMIT 1',
+      [userId],
+    );
+    await client.query('COMMIT');
+    const newOrderId = orderRes.rows[0]?.order_id;
+    return res.status(201).json({ message: 'Order created', order_id: newOrderId });
+  } catch (err) {
+    if (client) await client.query('ROLLBACK');
+    console.error('checkout:', err.message);
+    return res.status(500).json({ error: 'Server error during checkout' });
+  } finally {
+    if (client) client.release();
+  }
+};
+
+module.exports = { getCartItems, addToCart, updateCartItem, removeCartItem, getCartTotal, checkout };
