@@ -13,6 +13,8 @@ const categoryRoutes = require("./routes/categoryRoutes");
 const addressRoutes = require('./routes/addressRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const wishlistRoutes = require('./routes/wishlistRoutes');
+const orderRoutes = require('./routes/orderRoutes');
+const checkoutRoutes = require('./routes/checkoutRoutes');
 
 const notFound = require('./middleware/notFound');
 const errorHandler = require('./middleware/errorHandler');
@@ -31,6 +33,8 @@ app.use("/api/categories", categoryRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/wishlists', wishlistRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/checkout', checkoutRoutes);
 
 app.get('/test-db', async (req, res) => {
   try {

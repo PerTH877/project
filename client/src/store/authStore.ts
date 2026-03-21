@@ -10,6 +10,9 @@ interface AuthStore extends AuthState {
 function decodeToken(token: string): Omit<AuthState, 'token'> | null {
     try {
         const payload = JSON.parse(atob(token.split('.')[1]))
+        if (payload.exp && Date.now() >= payload.exp * 1000) {
+            return null
+        }
         return {
             role: payload.role ?? null,
             user_id: payload.user_id,
@@ -41,7 +44,7 @@ export const useAuthStore = create<AuthStore>()(
             },
         }),
         {
-            name: 'nexus-auth',
+            name: 'paruvo-auth',
         }
     )
 )

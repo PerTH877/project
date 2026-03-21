@@ -1,38 +1,102 @@
 const router = require("express").Router();
+const { authMiddleware, requireRole } = require("../middleware/authMiddleware");
 const {
   adminLogin,
+  getCurrentAdmin,
+  getAdminOverview,
+  getCategoryPerformance,
+  getConversionSignals,
+  getDemandOpportunities,
+  getGeographicDemand,
+  getInventoryRisk,
+  getReturnsRisk,
+  getSellerPerformance,
+  getWarehousePressure,
   listPendingSellers,
   verifySeller,
   getTopCategories,
   getTopSellers,
   getTopProducts,
 } = require("../controllers/adminController");
-const { authMiddleware, requireRole } = require("../middleware/authMiddleware");
 
 router.post("/login", adminLogin);
+router.get("/me", authMiddleware, requireRole("admin"), getCurrentAdmin);
 
+router.get("/overview", authMiddleware, requireRole("admin"), getAdminOverview);
 router.get("/sellers/pending", authMiddleware, requireRole("admin"), listPendingSellers);
-router.patch("/sellers/:seller_id/verify", authMiddleware, requireRole("admin"), verifySeller);
+router.patch(
+  "/sellers/:seller_id/verify",
+  authMiddleware,
+  requireRole("admin"),
+  verifySeller
+);
 
-// Analytics endpoints for administrators.  These provide aggregated
-// statistics across the platform and are protected by the admin role.
+router.get(
+  "/analytics/seller-performance",
+  authMiddleware,
+  requireRole("admin"),
+  getSellerPerformance
+);
+router.get(
+  "/analytics/category-performance",
+  authMiddleware,
+  requireRole("admin"),
+  getCategoryPerformance
+);
+router.get(
+  "/analytics/demand-opportunities",
+  authMiddleware,
+  requireRole("admin"),
+  getDemandOpportunities
+);
+router.get(
+  "/analytics/warehouse-pressure",
+  authMiddleware,
+  requireRole("admin"),
+  getWarehousePressure
+);
+router.get(
+  "/analytics/geographic-demand",
+  authMiddleware,
+  requireRole("admin"),
+  getGeographicDemand
+);
+router.get(
+  "/analytics/returns-risk",
+  authMiddleware,
+  requireRole("admin"),
+  getReturnsRisk
+);
+router.get(
+  "/analytics/inventory-risk",
+  authMiddleware,
+  requireRole("admin"),
+  getInventoryRisk
+);
+router.get(
+  "/analytics/conversion-signals",
+  authMiddleware,
+  requireRole("admin"),
+  getConversionSignals
+);
+
 router.get(
   "/analytics/top-categories",
   authMiddleware,
   requireRole("admin"),
-  getTopCategories,
+  getTopCategories
 );
 router.get(
   "/analytics/top-sellers",
   authMiddleware,
   requireRole("admin"),
-  getTopSellers,
+  getTopSellers
 );
 router.get(
   "/analytics/top-products",
   authMiddleware,
   requireRole("admin"),
-  getTopProducts,
+  getTopProducts
 );
 
 module.exports = router;

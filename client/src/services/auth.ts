@@ -36,4 +36,16 @@ export const authService = {
         const res = await api.post('/admin/login', { email, password })
         return res.data.token as string
     },
+
+    validateSession: async (role: 'user' | 'seller' | 'admin') => {
+        const endpoint =
+            role === 'admin'
+                ? '/admin/me'
+                : role === 'seller'
+                    ? '/sellers/me'
+                    : '/users/me'
+
+        const res = await api.get(endpoint)
+        return res.data
+    },
 }

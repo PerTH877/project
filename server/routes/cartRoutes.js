@@ -7,6 +7,7 @@ const {
   removeCartItem,
   getCartTotal,
   checkout,
+  toggleSaveForLater,
 } = require('../controllers/cartController');
 
 // Define the '/total' route before the parameterised route so that it
@@ -22,6 +23,7 @@ router.post('/checkout', authMiddleware, requireRole('user'), checkout);
 router.get('/', authMiddleware, requireRole('user'), getCartItems);
 router.post('/', authMiddleware, requireRole('user'), addToCart);
 router.put('/:cart_id', authMiddleware, requireRole('user'), updateCartItem);
+router.patch('/:cart_id/save', authMiddleware, requireRole('user'), toggleSaveForLater);
 router.delete('/:cart_id', authMiddleware, requireRole('user'), removeCartItem);
 
 module.exports = router;

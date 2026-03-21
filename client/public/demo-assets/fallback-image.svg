@@ -1,0 +1,61 @@
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#060a14"/>
+      <stop offset="100%" stop-color="#0d1220"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="600" fill="url(#bg)"/>
+
+  <!-- Grid lines -->
+  <g opacity="0.12" stroke="#00ffff" stroke-width="0.5">
+    <line x1="0" y1="75" x2="800" y2="75"/>
+    <line x1="0" y1="150" x2="800" y2="150"/>
+    <line x1="0" y1="225" x2="800" y2="225"/>
+    <line x1="0" y1="300" x2="800" y2="300"/>
+    <line x1="0" y1="375" x2="800" y2="375"/>
+    <line x1="0" y1="450" x2="800" y2="450"/>
+    <line x1="0" y1="525" x2="800" y2="525"/>
+    <line x1="100" y1="0" x2="100" y2="600"/>
+    <line x1="200" y1="0" x2="200" y2="600"/>
+    <line x1="300" y1="0" x2="300" y2="600"/>
+    <line x1="400" y1="0" x2="400" y2="600"/>
+    <line x1="500" y1="0" x2="500" y2="600"/>
+    <line x1="600" y1="0" x2="600" y2="600"/>
+    <line x1="700" y1="0" x2="700" y2="600"/>
+  </g>
+
+  <!-- Corner brackets - top left -->
+  <g stroke="#00ffff" stroke-width="2" fill="none" opacity="0.7" filter="url(#glow)">
+    <polyline points="20,50 20,20 50,20"/>
+    <polyline points="750,20 780,20 780,50"/>
+    <polyline points="20,550 20,580 50,580"/>
+    <polyline points="750,580 780,580 780,550"/>
+  </g>
+
+  <!-- Center scan line -->
+  <rect x="0" y="299" width="800" height="2" fill="#00ffff" opacity="0.08"/>
+
+  <!-- Image icon -->
+  <g filter="url(#glow)" opacity="0.8">
+    <rect x="310" y="240" width="180" height="120" rx="10" stroke="#00ffff" stroke-width="1.5" fill="none"/>
+    <circle cx="345" cy="273" r="14" stroke="#00ffff" stroke-width="1.5" fill="none"/>
+    <polyline points="310,330 355,285 390,315 430,265 490,360" stroke="#ff58d6" stroke-width="2" fill="none" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Label -->
+  <text x="400" y="400" font-family="monospace" font-size="13" font-weight="700" fill="#00ffff" text-anchor="middle" opacity="0.6" letter-spacing="6">NO IMAGE</text>
+
+  <!-- Horizontal neon lines -->
+  <line x1="100" y1="300" x2="295" y2="300" stroke="#00ffff" stroke-width="1" opacity="0.3"/>
+  <line x1="505" y1="300" x2="700" y2="300" stroke="#ff58d6" stroke-width="1" opacity="0.3"/>
+</svg>

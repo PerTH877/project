@@ -103,4 +103,30 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, loginUser };
+const getCurrentUser = async (req, res) => {
+  const userId = req.user?.user_id;
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT user_id, full_name, email, phone_number, nearby_warehouse_id
+       FROM users
+       WHERE user_id = $1
+       LIMIT 1`,
+      [userId]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    return res.json({ user: result.rows[0] });
+  } catch (err) {
+    console.error("getCurrentUser:", err.message);
+    return res.status(500).json({ error: "Failed to load user profile" });
+  }
+};
+
+module.exports = { registerUser, loginUser, getCurrentUser };

@@ -90,6 +90,7 @@ CREATE TABLE Products (
     brand VARCHAR(100),
     description TEXT,
     base_price DECIMAL(10, 2) NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -398,4 +399,3 @@ BEGIN
     DELETE FROM cart WHERE user_id = p_user_id;
 END;
 $$;
-

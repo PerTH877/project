@@ -1,6 +1,6 @@
-# Nexus Market - Premium E-commerce Frontend
+# PARUVO - Premium E-commerce Frontend
 
-A visually exceptional, production-grade frontend built for the Nexus Market e-commerce API. This application prioritizes elegant design, robust client-side architecture, and excellent user experience across three distinct roles: Customers, Sellers, and Administrators.
+A visually polished, production-grade frontend built for the PARUVO e-commerce API. This application prioritizes robust client-side architecture and a strong user experience across customers, sellers, and administrators.
 
 ## Architecture & Tech Stack
 
