@@ -6,7 +6,7 @@ const {
   getUserOrderDetail,
   getSellerOrders,
   getSellerOrderDetail,
-} = require("../controllers/orderController");
+} = require("../controllers/order.controller");
 
 router.get("/", authMiddleware, requireRole("user"), getUserOrders);
 router.get("/:order_id", authMiddleware, requireRole("user"), getUserOrderDetail);

@@ -26,7 +26,10 @@ export default function CartPage() {
       queryClient.invalidateQueries({ queryKey: ["cart-total"] });
       queryClient.invalidateQueries({ queryKey: ["checkout-review"] });
     },
-    onError: () => toast.error("Could not update that cart item."),
+    onError: (error: any) => {
+      const msg = error.response?.data?.error || "Could not update that cart item.";
+      toast.error(msg);
+    },
   });
 
   const removeMutation = useMutation({
@@ -37,7 +40,10 @@ export default function CartPage() {
       queryClient.invalidateQueries({ queryKey: ["checkout-review"] });
       toast.success("Item removed from cart.");
     },
-    onError: () => toast.error("Could not remove that cart item."),
+    onError: (error: any) => {
+      const msg = error.response?.data?.error || "Could not remove that cart item.";
+      toast.error(msg);
+    },
   });
 
   const saveForLaterMutation = useMutation({
@@ -49,7 +55,10 @@ export default function CartPage() {
       queryClient.invalidateQueries({ queryKey: ["checkout-review"] });
       toast.success("Cart state synchronized.");
     },
-    onError: () => toast.error("Could not update saved items."),
+    onError: (error: any) => {
+      const msg = error.response?.data?.error || "Could not update saved items.";
+      toast.error(msg);
+    },
   });
 
   if (cartQuery.isLoading) {

@@ -14,6 +14,7 @@
 
 require('dotenv').config();
 const { Pool } = require('pg');
+const bcrypt = require('bcrypt');
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
@@ -40,6 +41,9 @@ const log = (msg) => process.stdout.write(`  ✓  ${msg}\n`);
 async function cleanup() {
   console.log('\n[0/9] Cleaning up old demo data…');
   // Order matters: children before parents
+  await query('DELETE FROM Order_Items');
+  await query('DELETE FROM Orders');
+  await query('DELETE FROM Users');
   await query('DELETE FROM Inventory');
   await query('DELETE FROM Product_Specifications');
   await query('DELETE FROM Product_Media');
@@ -118,8 +122,8 @@ async function seedCategoryFees(catMap) {
 
 async function seedSellers() {
   console.log('\n[4/9] Seeding Sellers…');
-  // bcrypt hash of "seller123"
-  const HASH = '$2b$10$5pFnVEJpjjpDwOqVGp6xh.PiHxz0F9YjI3PkJXbCsHnTOJhsUKi5q';
+  // Keep the demo seller password aligned with the README and login examples.
+  const HASH = await bcrypt.hash('seller123', 10);
   const sellers = [
     { company_name: 'TechZone BD',                    contact_email: 'sales@techzonebd.com',    gst_number: 'GST-10023-BD', rating: 4.75, balance: 125000 },
     { company_name: 'Apple Authorized Reseller BD',   contact_email: 'contact@applebd.com',     gst_number: 'GST-20045-BD', rating: 4.90, balance: 350000 },
@@ -152,6 +156,7 @@ async function seedProducts(catMap, sellerMap, warehouseIds) {
   const S = sellerMap;
   const C = catMap;
   const W = warehouseIds;
+  const allVariantIds = [];
 
   const products = [
     // 1 ─────────────────────────────────────────────────────────────────────
@@ -677,6 +682,7 @@ async function seedProducts(catMap, sellerMap, warehouseIds) {
         [productId, v.sku, JSON.stringify(v.attributes), v.price_adj]
       );
       variantIds.push(variant.variant_id);
+      allVariantIds.push(variant.variant_id);
     }
 
     // Insert Media
@@ -708,6 +714,154 @@ async function seedProducts(catMap, sellerMap, warehouseIds) {
       }
     }
   }
+
+  return allVariantIds;
+}
+
+// ─── 6. Users ───────────────────────────────────────────────────────────────
+
+async function seedUsers() {
+  console.log('\n[6/9] Seeding Users (buyers)…');
+
+  const HASH = await bcrypt.hash('buyer123', 10);
+  const users = [
+    { full_name: 'Amin Rahman', email: 'amin.rahman@demo.paruvo.com', phone: '+8801711000001' },
+    { full_name: 'Nusrat Jahan', email: 'nusrat.jahan@demo.paruvo.com', phone: '+8801711000002' },
+    { full_name: 'Mehedi Hasan', email: 'mehedi.hasan@demo.paruvo.com', phone: '+8801711000003' },
+    { full_name: 'Farhana Akter', email: 'farhana.akter@demo.paruvo.com', phone: '+8801711000004' },
+    { full_name: 'Tanvir Alam', email: 'tanvir.alam@demo.paruvo.com', phone: '+8801711000005' },
+    { full_name: 'Sadia Islam', email: 'sadia.islam@demo.paruvo.com', phone: '+8801711000006' },
+    { full_name: 'Rafiul Karim', email: 'rafiul.karim@demo.paruvo.com', phone: '+8801711000007' },
+    { full_name: 'Mahi Chowdhury', email: 'mahi.chowdhury@demo.paruvo.com', phone: '+8801711000008' },
+    { full_name: 'Shaila Noor', email: 'shaila.noor@demo.paruvo.com', phone: '+8801711000009' },
+    { full_name: 'Riad Hossain', email: 'riad.hossain@demo.paruvo.com', phone: '+8801711000010' },
+  ];
+
+  const userIds = [];
+  for (const u of users) {
+    const user = await insertReturningId(
+      `INSERT INTO Users (full_name, email, password_hash, phone_number)
+       VALUES ($1,$2,$3,$4)`,
+      [u.full_name, u.email, HASH, u.phone]
+    );
+    userIds.push(user.user_id);
+    log(`User: ${u.full_name}  (id=${user.user_id})`);
+  }
+
+  return userIds;
+}
+
+// ─── 7. Orders ──────────────────────────────────────────────────────────────
+
+async function seedOrders(userIds) {
+  console.log('\n[7/9] Seeding Orders (last 30 days)…');
+
+  const orderCount = 45;
+  const statusPool = ['Delivered', 'Pending', 'Returned'];
+  const statusWeights = [0.68, 0.24, 0.08];
+
+  const pickStatus = () => {
+    const roll = Math.random();
+    let cumulative = 0;
+    for (let i = 0; i < statusPool.length; i++) {
+      cumulative += statusWeights[i];
+      if (roll <= cumulative) return statusPool[i];
+    }
+    return statusPool[0];
+  };
+
+  const orderIds = [];
+  for (let i = 0; i < orderCount; i++) {
+    const userId = userIds[Math.floor(Math.random() * userIds.length)];
+    const inRecentWindow = Math.random() < 0.6;
+    const dayOffset = inRecentWindow
+      ? Math.floor(Math.random() * 10)
+      : 10 + Math.floor(Math.random() * 20);
+    const orderDate = new Date();
+    orderDate.setDate(orderDate.getDate() - dayOffset);
+    orderDate.setHours(
+      Math.floor(Math.random() * 24),
+      Math.floor(Math.random() * 60),
+      Math.floor(Math.random() * 60),
+      0
+    );
+
+    const order = await insertReturningId(
+      `INSERT INTO Orders (user_id, status, total_amount, order_date)
+       VALUES ($1,$2,$3,$4)`,
+      [userId, pickStatus(), 0, orderDate]
+    );
+
+    orderIds.push(order.order_id);
+  }
+
+  log(`Orders created: ${orderIds.length}`);
+  return orderIds;
+}
+
+// ─── 8. Order Items ─────────────────────────────────────────────────────────
+
+async function seedOrderItems(orderIds, variantIds) {
+  console.log('\n[8/9] Seeding Order_Items…');
+
+  const pricing = await query(
+    `SELECT
+       pv.variant_id,
+       p.base_price,
+       pv.price_adjustment,
+       COALESCE(cf.commission_percentage, 5.00) AS platform_fee_percent
+     FROM Product_Variants pv
+     JOIN Products p ON p.product_id = pv.product_id
+     LEFT JOIN Category_Fees cf ON cf.category_id = p.category_id
+     WHERE pv.variant_id = ANY($1::int[])`,
+    [variantIds]
+  );
+
+  const priceMap = new Map();
+  for (const row of pricing.rows) {
+    const unitPrice = Number(row.base_price) + Number(row.price_adjustment || 0);
+    priceMap.set(Number(row.variant_id), {
+      unitPrice,
+      platformFeePercent: Number(row.platform_fee_percent),
+    });
+  }
+
+  let itemCount = 0;
+  for (const orderId of orderIds) {
+    const itemLines = 1 + Math.floor(Math.random() * 3);
+    const usedVariants = new Set();
+    let totalAmount = 0;
+
+    for (let i = 0; i < itemLines; i++) {
+      let variantId = variantIds[Math.floor(Math.random() * variantIds.length)];
+      while (usedVariants.has(variantId)) {
+        variantId = variantIds[Math.floor(Math.random() * variantIds.length)];
+      }
+      usedVariants.add(variantId);
+
+      const pricingInfo = priceMap.get(variantId);
+      if (!pricingInfo) continue;
+
+      const quantity = 1 + Math.floor(Math.random() * 3);
+      totalAmount += quantity * pricingInfo.unitPrice;
+
+      await query(
+        `INSERT INTO Order_Items (order_id, variant_id, quantity, unit_price, platform_fee_percent)
+         VALUES ($1,$2,$3,$4,$5)`,
+        [orderId, variantId, quantity, pricingInfo.unitPrice, pricingInfo.platformFeePercent]
+      );
+      itemCount++;
+    }
+
+    await query(
+      `UPDATE Orders
+       SET total_amount = $1
+       WHERE order_id = $2`,
+      [totalAmount.toFixed(2), orderId]
+    );
+  }
+
+  log(`Order items created: ${itemCount}`);
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -728,7 +882,10 @@ async function main() {
     const catMap       = await seedCategories();
     await seedCategoryFees(catMap);
     const sellerMap    = await seedSellers();
-    await seedProducts(catMap, sellerMap, warehouseIds);
+    const variantIds   = await seedProducts(catMap, sellerMap, warehouseIds);
+    const userIds      = await seedUsers();
+    const orderIds     = await seedOrders(userIds);
+    await seedOrderItems(orderIds, variantIds);
 
     console.log('\n✅  Seed complete!');
     console.log('   ─────────────────────────────────────────');
@@ -736,6 +893,9 @@ async function main() {
     console.log('   Categories:        9  (with fees)');
     console.log('   Sellers:           5');
     console.log('   Products:         22  (with variants, media, specs, inventory)');
+    console.log('   Users:            10  (dummy buyers)');
+    console.log('   Orders:           45  (last 30 days)');
+    console.log('   Status mix:       Delivered/Pending/Returned');
     console.log('   Image source:      Unsplash CDN (hotlink-safe)');
     console.log('   ─────────────────────────────────────────\n');
   } catch (err) {

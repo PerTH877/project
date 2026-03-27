@@ -61,7 +61,10 @@ export default function CheckoutPage() {
   const setAddressMutation = useMutation({
     mutationFn: (addressId: number) => checkoutService.setAddress(addressId),
     onSuccess: () => setStep("PAYMENT"),
-    onError: () => toast.error("Failed to validate that address."),
+    onError: (error: any) => {
+      const msg = error.response?.data?.error || "Failed to validate that address.";
+      toast.error(msg);
+    },
   });
 
   const setPaymentMutation = useMutation({
@@ -70,7 +73,10 @@ export default function CheckoutPage() {
       queryClient.invalidateQueries({ queryKey: ["checkout-review"] });
       setStep("REVIEW");
     },
-    onError: () => toast.error("Payment method rejected by the backend."),
+    onError: (error: any) => {
+      const msg = error.response?.data?.error || "Payment method rejected by the backend.";
+      toast.error(msg);
+    },
   });
 
   const reviewQuery = useQuery({
@@ -93,7 +99,10 @@ export default function CheckoutPage() {
       toast.success("Order placed successfully.");
       navigate("/orders");
     },
-    onError: () => toast.error("Transaction failed during the final checkout step."),
+    onError: (error: any) => {
+      const msg = error.response?.data?.error || "Transaction failed during the final checkout step.";
+      toast.error(msg);
+    },
   });
 
   const steps = [

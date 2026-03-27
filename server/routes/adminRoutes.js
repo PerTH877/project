@@ -17,7 +17,7 @@ const {
   getTopCategories,
   getTopSellers,
   getTopProducts,
-} = require("../controllers/adminController");
+} = require("../controllers/admin.controller");
 
 router.post("/login", adminLogin);
 router.get("/me", authMiddleware, requireRole("admin"), getCurrentAdmin);

@@ -11,6 +11,8 @@ const normalizeText = (value) => {
   return normalized.length ? normalized : null;
 };
 
+
+
 const registerSeller = async (req, res) => {
   const companyName = normalizeText(req.body.company_name);
   const contactEmail = normalizeEmail(req.body.contact_email);
