@@ -91,9 +91,17 @@ CREATE TABLE Products (
     description TEXT,
     base_price DECIMAL(10, 2) NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
+    is_featured BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
+CREATE TABLE Flash_Deals (
+    deal_id SERIAL PRIMARY KEY,
+    product_id INTEGER REFERENCES Products(product_id) ON DELETE CASCADE,
+    discount_percentage DECIMAL(5, 2) NOT NULL CHECK (discount_percentage BETWEEN 0 AND 100),
+    start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    end_time TIMESTAMP NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE
+);
 
 
 CREATE TABLE Product_Variants (
@@ -334,11 +342,21 @@ RETURNS DECIMAL(10,2) AS $$
 DECLARE
     total DECIMAL(10,2);
 BEGIN
-    SELECT COALESCE(SUM(c.quantity * (p.base_price + COALESCE(pv.price_adjustment, 0))), 0)
+    SELECT COALESCE(SUM(
+        c.quantity * 
+        (p.base_price + COALESCE(pv.price_adjustment, 0)) * 
+        (1 - (COALESCE(fd.max_discount, 0) / 100))
+    ), 0)
     INTO total
     FROM cart c
     JOIN product_variants pv ON c.variant_id = pv.variant_id
     JOIN products p ON pv.product_id = p.product_id
+    LEFT JOIN (
+        SELECT product_id, MAX(discount_percentage) AS max_discount
+        FROM Flash_Deals
+        WHERE is_active = TRUE AND end_time > CURRENT_TIMESTAMP
+        GROUP BY product_id
+    ) fd ON fd.product_id = p.product_id
     WHERE c.user_id = p_user_id;
     RETURN total;
 END;
@@ -372,11 +390,18 @@ BEGIN
     -- Iterate through each cart item and copy it into Order_Items.
     FOR cart_rec IN
         SELECT c.variant_id, c.quantity,
-               (p.base_price + COALESCE(pv.price_adjustment, 0)) AS unit_price,
+               ((p.base_price + COALESCE(pv.price_adjustment, 0)) * 
+                (1 - (COALESCE(fd.max_discount, 0) / 100))) AS unit_price,
                cf.commission_percentage AS fee_percentage
         FROM cart c
         JOIN product_variants pv ON c.variant_id = pv.variant_id
         JOIN products p ON pv.product_id = p.product_id
+        LEFT JOIN (
+            SELECT product_id, MAX(discount_percentage) AS max_discount
+            FROM Flash_Deals
+            WHERE is_active = TRUE AND end_time > CURRENT_TIMESTAMP
+            GROUP BY product_id
+        ) fd ON fd.product_id = p.product_id
         LEFT JOIN categories cat ON p.category_id = cat.category_id
         LEFT JOIN category_fees cf ON cf.category_id = cat.category_id
         WHERE c.user_id = p_user_id

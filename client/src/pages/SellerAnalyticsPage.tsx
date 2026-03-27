@@ -146,7 +146,7 @@ export default function SellerAnalyticsPage() {
                   <div>
                     <p className="font-semibold text-white">{product.title}</p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {product.units_sold} units | {product.review_count} reviews | {product.avg_rating.toFixed(1)} rating
+                      {product.units_sold} units | {product.review_count} reviews | {Number(product.avg_rating || 0).toFixed(1)} rating
                     </p>
                   </div>
                   <p className="text-sm font-semibold text-primary">{formatCurrencyBDT(product.gross_sales)}</p>

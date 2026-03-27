@@ -16,4 +16,9 @@ export const sellerService = {
     const res = await api.get("/sellers/analytics");
     return res.data;
   },
+
+  restockInventory: async (payload: { variant_id: number; warehouse_id: number; quantity: number }) => {
+    const res = await api.post("/warehouses/restock", payload);
+    return res.data;
+  },
 };

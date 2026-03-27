@@ -6,7 +6,6 @@ const {
   updateCartItem,
   removeCartItem,
   getCartTotal,
-  checkout,
   toggleSaveForLater,
 } = require('../controllers/cartController');
 
@@ -15,9 +14,6 @@ const {
 // the computed cart total for the authenticated user.
 router.get('/total', authMiddleware, requireRole('user'), getCartTotal);
 
-// Checkout endpoint to create a new order using the stored procedure.  Must
-// precede the parameterised route definitions to avoid conflicts.
-router.post('/checkout', authMiddleware, requireRole('user'), checkout);
 
 // Standard cart CRUD endpoints
 router.get('/', authMiddleware, requireRole('user'), getCartItems);

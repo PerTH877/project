@@ -11,7 +11,10 @@ import CheckoutPage from "@/pages/CheckoutPage";
 import AddressesPage from "@/pages/AddressesPage";
 import WishlistsPage from "@/pages/WishlistsPage";
 import OrdersPage from "@/pages/OrdersPage";
+import AccountPage from "@/pages/AccountPage";
 import RouteErrorPage from "@/pages/RouteErrorPage";
+import DealsPage from "@/pages/DealsPage";
+import SupportPage from "@/pages/SupportPage";
 
 // Auth Pages
 import LoginPage from "@/pages/auth/LoginPage";
@@ -37,6 +40,8 @@ const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: "search", element: <SearchPage /> },
       { path: "products/:id", element: <ProductDetailPage /> },
+      { path: "deals", element: <DealsPage /> },
+      { path: "support", element: <SupportPage /> },
 
       // Auth routes (public)
       { path: "login", element: <LoginPage /> },
@@ -54,6 +59,7 @@ const router = createBrowserRouter([
           { path: "checkout", element: <CheckoutPage /> },
           { path: "orders", element: <OrdersPage /> },
           { path: "account/addresses", element: <AddressesPage /> },
+          { path: "account/profile", element: <AccountPage /> },
           { path: "wishlists", element: <WishlistsPage /> },
         ],
       },

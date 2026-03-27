@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { cartService } from "@/services/cart";
 import { productsService } from "@/services/products";
 import { useAuthStore } from "@/store/authStore";
-import { Search, MapPin, ShoppingCart, Menu } from "lucide-react";
+import { Search, ShoppingCart, Menu, Zap } from "lucide-react";
 import { ParuvoLogo } from "@/components/branding/ParuvoLogo";
 
 export function Navbar() {
@@ -57,15 +57,7 @@ export function Navbar() {
           <ParuvoLogo compact className="scale-75 origin-left" />
         </Link>
         
-        {/* Deliver to Area */}
-        <div className="hidden md:flex shrink-0 items-center px-2 py-1 hover:outline hover:outline-1 hover:outline-cyan-400 rounded-sm cursor-pointer transition-all">
-          <MapPin className="text-cyan-400 w-4 h-4 mr-1 mb-2" />
-          <div className="flex flex-col">
-            <span className="text-[11px] text-slate-300 leading-tight">Deliver to</span>
-            <span className="text-sm font-bold text-white leading-tight">Bangladesh</span>
-          </div>
-        </div>
-        
+
         {/* Search Bar (Auto-Suggest enabled) */}
         <form onSubmit={submitSearch} className="flex-1 flex min-w-[300px] h-10 group relative rounded-md overflow-visible">
           <select 
@@ -178,17 +170,14 @@ export function Navbar() {
 
       {/* Bottom Nav Strip - Mega Menu Placeholder */}
       <nav className="h-10 bg-[#0a0f18] flex items-center px-4 gap-4 text-sm font-medium text-slate-200 overflow-x-auto no-scrollbar border-b border-white/5">
-        <button className="flex items-center gap-1 hover:outline hover:outline-1 hover:outline-cyan-400 px-2 py-1 rounded-sm whitespace-nowrap transition-all">
+        <Link to="/search" className="flex items-center gap-1 hover:outline hover:outline-1 hover:outline-cyan-400 px-2 py-1 rounded-sm whitespace-nowrap transition-all">
           <Menu className="w-5 h-5" />
           All
-        </button>
-        <Link to="/" className="hover:outline hover:outline-1 hover:outline-cyan-400 px-2 py-1 rounded-sm whitespace-nowrap transition-all">Today's Deals</Link>
-        <Link to="/account/addresses" className="hover:outline hover:outline-1 hover:outline-cyan-400 px-2 py-1 rounded-sm whitespace-nowrap transition-all">Customer Service</Link>
+        </Link>
+        <Link to="/deals" className="hover:outline hover:outline-1 hover:outline-cyan-400 px-2 py-1 rounded-sm whitespace-nowrap transition-all">Today's Deals</Link>
+        <Link to="/support" className="hover:outline hover:outline-1 hover:outline-cyan-400 px-2 py-1 rounded-sm whitespace-nowrap transition-all">Customer Service</Link>
         <Link to="/wishlists" className="hover:outline hover:outline-1 hover:outline-cyan-400 px-2 py-1 rounded-sm whitespace-nowrap transition-all">Registry & Saved</Link>
         <Link to="/seller/register" className="hover:outline hover:outline-1 hover:outline-cyan-400 px-2 py-1 rounded-sm whitespace-nowrap transition-all hidden md:block">Sell</Link>
-        <div className="ml-auto neon-text-magenta font-bold hidden lg:block hover:text-white transition-colors cursor-pointer">
-          Cyber Week Deals
-        </div>
       </nav>
     </header>
   );

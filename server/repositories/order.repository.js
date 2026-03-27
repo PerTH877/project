@@ -181,9 +181,57 @@ const getSellerOrderDetail = async (sellerId, orderId) => {
   };
 };
 
+/**
+ * Verify that the given order contains at least one product belonging to sellerId.
+ */
+const verifySellerOwnsOrder = async (orderId, sellerId) => {
+  const result = await pool.query(
+    `SELECT 1
+     FROM order_items oi
+     JOIN product_variants pv ON pv.variant_id = oi.variant_id
+     JOIN products p ON p.product_id = pv.product_id
+     WHERE oi.order_id = $1 AND p.seller_id = $2
+     LIMIT 1`,
+    [orderId, sellerId]
+  );
+  return result.rows.length > 0;
+};
+
+/**
+ * Update the status column of an order and return the updated row.
+ */
+const updateOrderStatus = async (orderId, newStatus) => {
+  const result = await pool.query(
+    `UPDATE orders
+     SET status = $1
+     WHERE order_id = $2
+     RETURNING order_id, status, total_amount, order_date`,
+    [newStatus, orderId]
+  );
+  return result.rows[0] || null;
+};
+
+/**
+ * Insert a new Shipment record for an order.
+ */
+const createShipment = async (orderId, trackingNumber) => {
+  const result = await pool.query(
+    `INSERT INTO shipments (order_id, status, tracking_number)
+     VALUES ($1, 'In_Transit', $2)
+     ON CONFLICT (order_id) DO UPDATE
+       SET status = 'In_Transit', tracking_number = EXCLUDED.tracking_number
+     RETURNING shipment_id, order_id, status, tracking_number`,
+    [orderId, trackingNumber]
+  );
+  return result.rows[0] || null;
+};
+
 module.exports = {
   getUserOrders,
   getUserOrderDetail,
   getSellerOrders,
   getSellerOrderDetail,
+  verifySellerOwnsOrder,
+  updateOrderStatus,
+  createShipment,
 };

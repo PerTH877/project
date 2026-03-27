@@ -6,11 +6,14 @@ const {
   getUserOrderDetail,
   getSellerOrders,
   getSellerOrderDetail,
+  updateOrderStatus,
 } = require("../controllers/order.controller");
 
+// User routes
 router.get("/", authMiddleware, requireRole("user"), getUserOrders);
 router.get("/:order_id", authMiddleware, requireRole("user"), getUserOrderDetail);
 
+// Seller routes
 router.get(
   "/seller/list",
   authMiddleware,
@@ -24,6 +27,13 @@ router.get(
   requireRole("seller"),
   requireVerifiedSeller,
   getSellerOrderDetail
+);
+router.patch(
+  "/:order_id/status",
+  authMiddleware,
+  requireRole("seller"),
+  requireVerifiedSeller,
+  updateOrderStatus
 );
 
 module.exports = router;

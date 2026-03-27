@@ -118,9 +118,37 @@ const getSellerOrderDetail = async (sellerId, orderId) => {
   };
 };
 
+const ALLOWED_STATUSES = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+
+const updateOrderStatus = async (sellerId, orderId, newStatus) => {
+  if (!ALLOWED_STATUSES.includes(newStatus)) {
+    const err = new Error(`Invalid status. Allowed: ${ALLOWED_STATUSES.join(', ')}`);
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const isOwner = await orderRepository.verifySellerOwnsOrder(orderId, sellerId);
+  if (!isOwner) {
+    const err = new Error('Order not found or does not belong to this seller');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const updatedOrder = await orderRepository.updateOrderStatus(orderId, newStatus);
+
+  let shipment = null;
+  if (newStatus === 'Shipped') {
+    const trackingNumber = `TRK-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+    shipment = await orderRepository.createShipment(orderId, trackingNumber);
+  }
+
+  return { order: updatedOrder, shipment };
+};
+
 module.exports = {
   getUserOrders,
   getUserOrderDetail,
   getSellerOrders,
   getSellerOrderDetail,
+  updateOrderStatus,
 };

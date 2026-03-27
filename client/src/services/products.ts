@@ -23,6 +23,13 @@ export interface ProductFilters {
 }
 
 export const productsService = {
+  getFeaturedProducts: async (): Promise<any> => {
+    const res = await api.get("/products/featured");
+    return res.data;
+  },
+
+  getDeals: () => api.get('/products/deals').then(res => res.data.data || res.data),
+
   list: async (filters: ProductFilters = {}): Promise<ProductListResponse> => {
     const res = await api.get("/products", { params: filters });
     return res.data;
@@ -143,3 +150,5 @@ export const warehousesService = {
     return res.data.warehouse;
   },
 };
+
+export const getDeals = () => api.get('/products/deals').then(res => res.data.data || res.data);

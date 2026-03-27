@@ -30,6 +30,15 @@ async function getCartTotal(client, userId) {
 }
 
 async function getVariantWithStock(client, variantId) {
+  // Step 1: Acquire row-level locks on all inventory rows for this variant.
+  // This blocks any concurrent transaction from reading/modifying the same
+  // rows until this transaction commits or rolls back, preventing overselling.
+  await client.query(
+    `SELECT inventory_id FROM inventory WHERE variant_id = $1 FOR UPDATE`,
+    [variantId]
+  );
+
+  // Step 2: Now safely read the variant details and aggregate the locked stock.
   const result = await client.query(
     `SELECT pv.variant_id, p.product_id, p.is_active, pv.is_active AS variant_is_active,
             COALESCE(SUM(i.stock_quantity), 0)::int AS available_stock

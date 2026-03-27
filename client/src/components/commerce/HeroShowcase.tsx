@@ -1,38 +1,28 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Cpu, Star, Store, Truck, Zap } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SmartImage } from "@/components/media/SmartImage";
 import { cn, formatCurrencyBDT } from "@/lib/utils";
-import type { ProductCard as ProductCardType } from "@/types";
 
 interface HeroShowcaseProps {
-  products?: ProductCardType[];
+  featuredProducts?: any[];
 }
 
-// Cyberpunk corner bracket overlay
-function CornerBrackets() {
+function CornerBrackets({ emptyState = false }: { emptyState?: boolean }) {
+  const bottomClass = emptyState ? "bottom-4" : "bottom-16";
   return (
     <>
-      {/* Top-left */}
       <div className="pointer-events-none absolute left-4 top-4 z-20 h-8 w-8" style={{ borderTop: '2px solid rgba(0,255,255,0.7)', borderLeft: '2px solid rgba(0,255,255,0.7)' }} />
-      {/* Top-right */}
       <div className="pointer-events-none absolute right-4 top-4 z-20 h-8 w-8" style={{ borderTop: '2px solid rgba(255,88,214,0.6)', borderRight: '2px solid rgba(255,88,214,0.6)' }} />
-      {/* Bottom-left */}
-      <div className="pointer-events-none absolute bottom-16 left-4 z-20 h-8 w-8" style={{ borderBottom: '2px solid rgba(255,88,214,0.6)', borderLeft: '2px solid rgba(255,88,214,0.6)' }} />
-      {/* Bottom-right */}
-      <div className="pointer-events-none absolute bottom-16 right-4 z-20 h-8 w-8" style={{ borderBottom: '2px solid rgba(0,255,255,0.6)', borderRight: '2px solid rgba(0,255,255,0.6)' }} />
+      <div className={`pointer-events-none absolute left-4 z-20 h-8 w-8 ${bottomClass}`} style={{ borderBottom: '2px solid rgba(255,88,214,0.6)', borderLeft: '2px solid rgba(255,88,214,0.6)' }} />
+      <div className={`pointer-events-none absolute right-4 z-20 h-8 w-8 ${bottomClass}`} style={{ borderBottom: '2px solid rgba(0,255,255,0.6)', borderRight: '2px solid rgba(0,255,255,0.6)' }} />
     </>
   );
 }
 
-export function HeroShowcase({ products = [] }: HeroShowcaseProps) {
-  const carouselProducts = useMemo(
-    () => products.filter((p) => p.primary_image).slice(0, 5),
-    [products]
-  );
-  // If all products got filtered but we still have some, use them all (SmartImage handles fallback)
-  const allProducts = carouselProducts.length > 0 ? carouselProducts : products.slice(0, 5);
+export function HeroShowcase({ featuredProducts = [] }: HeroShowcaseProps) {
+  const allProducts = Array.isArray(featuredProducts) ? featuredProducts : [];
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
@@ -50,18 +40,16 @@ export function HeroShowcase({ products = [] }: HeroShowcaseProps) {
     return () => window.clearInterval(timer);
   }, [allProducts.length, isAutoPlaying]);
 
-  // --- Empty state ---
   if (!allProducts.length) {
     return (
       <div
-        className="hero-carousel-shell flex min-h-[32rem] flex-col items-center justify-center gap-6 p-6 text-center sm:min-h-[44rem] rounded-[24px] border border-cyan-400/20"
+        className="hero-carousel-shell relative flex min-h-[24rem] sm:min-h-[32rem] flex-col items-center justify-center gap-6 p-6 text-center rounded-[24px] border border-cyan-400/20"
         style={{ boxShadow: '0 0 60px rgba(0,255,255,0.1), inset 0 0 40px rgba(0,255,255,0.04)' }}
       >
-        <CornerBrackets />
+        <CornerBrackets emptyState={true} />
         <div className="hero-carousel-grid" />
         <div className="hero-carousel-beam" />
 
-        {/* Standby icon */}
         <div className="relative z-10 flex flex-col items-center gap-4">
           <div className="relative rounded-[24px] border border-cyan-400/30 bg-cyan-400/[0.06] p-5"
             style={{ boxShadow: '0 0 30px rgba(0,255,255,0.15), inset 0 0 20px rgba(0,255,255,0.06)' }}>
@@ -126,7 +114,6 @@ export function HeroShowcase({ products = [] }: HeroShowcaseProps) {
       <div className="hero-carousel-beam" />
       <CornerBrackets />
 
-      {/* Slide counter — top right */}
       <div className="absolute right-14 top-4 z-30">
         <div className="inline-flex rounded-full border border-cyan-300/30 bg-black/40 backdrop-blur-sm px-3 py-1.5 text-[10px] font-black tracking-[0.3em] text-cyan-200"
           style={{ fontFamily: 'monospace' }}>
@@ -134,8 +121,7 @@ export function HeroShowcase({ products = [] }: HeroShowcaseProps) {
         </div>
       </div>
 
-      {/* Slides */}
-      <div className="relative min-h-[32rem] sm:min-h-[46rem]">
+      <div className="relative min-h-[24rem] sm:min-h-[32rem]">
         {allProducts.map((product, index) => (
           <Link
             key={product.product_id}
@@ -147,7 +133,6 @@ export function HeroShowcase({ products = [] }: HeroShowcaseProps) {
                 : "z-0 translate-x-6 opacity-0 pointer-events-none"
             )}
           >
-            {/* Image */}
             <div className="absolute inset-0">
               <SmartImage
                 src={product.primary_image}
@@ -156,16 +141,12 @@ export function HeroShowcase({ products = [] }: HeroShowcaseProps) {
                 aspectRatio=""
                 priority={index === activeIndex || index === (activeIndex + 1) % allProducts.length}
               />
-              {/* Gradient overlays */}
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,8,14,0.25)_0%,rgba(5,8,14,0.85)_65%,rgba(5,8,14,0.97)_100%)]" />
               <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,255,255,0.04),transparent_40%,transparent_60%,rgba(255,88,214,0.04))]" />
-              {/* Top neon line */}
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/90 to-transparent" style={{ boxShadow: '0 0 8px rgba(0,255,255,0.5)' }} />
-              {/* Bottom neon line */}
               <div className="absolute inset-x-0 bottom-[4.5rem] h-px bg-gradient-to-r from-transparent via-pink-400/70 to-transparent" />
             </div>
 
-            {/* Product info — bottom left */}
             <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-10 sm:pb-14">
               <div className="max-w-2xl">
                 <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -185,7 +166,7 @@ export function HeroShowcase({ products = [] }: HeroShowcaseProps) {
                   </span>
                   <span className="inline-flex items-center gap-2 text-amber-200">
                     <Star className="h-4 w-4 fill-amber-300 text-amber-300" />
-                    {product.avg_rating.toFixed(1)}
+                    {Number(product.avg_rating || 0).toFixed(1)}
                   </span>
                 </div>
 
@@ -194,7 +175,7 @@ export function HeroShowcase({ products = [] }: HeroShowcaseProps) {
                     <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-cyan-200/60">From</p>
                     <p className="mt-1 display-font text-4xl font-black text-white sm:text-5xl"
                       style={{ textShadow: '0 0 30px rgba(0,255,255,0.3)' }}>
-                      {formatCurrencyBDT(product.lowest_price)}
+                      {formatCurrencyBDT(Number(product.lowest_price) || Number(product.base_price))}
                     </p>
                   </div>
                   <div className="inline-flex items-center gap-2 rounded-[14px] border border-cyan-400/40 bg-black/40 backdrop-blur-sm px-3 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-cyan-100"
@@ -204,7 +185,6 @@ export function HeroShowcase({ products = [] }: HeroShowcaseProps) {
                   </div>
                 </div>
 
-                {/* View CTA */}
                 <div className="mt-5 inline-flex items-center gap-2 rounded-[16px] border border-cyan-400/50 bg-cyan-400/10 px-5 py-2.5 text-sm font-bold text-cyan-200 transition duration-300 hover:border-cyan-300 hover:bg-cyan-400/20 hover:text-white"
                   style={{ backdropFilter: 'blur(12px)', boxShadow: '0 0 20px rgba(0,255,255,0.12)' }}>
                   <Zap className="h-4 w-4" />
@@ -217,7 +197,6 @@ export function HeroShowcase({ products = [] }: HeroShowcaseProps) {
         ))}
       </div>
 
-      {/* Controls */}
       <div className="absolute bottom-0 left-0 right-0 z-20 flex items-center justify-between gap-4 p-5 sm:p-7">
         <button
           type="button"
@@ -228,7 +207,6 @@ export function HeroShowcase({ products = [] }: HeroShowcaseProps) {
           <ChevronLeft className="h-5 w-5" />
         </button>
 
-        {/* Dots */}
         <div className="flex items-center gap-2">
           {allProducts.map((_, index) => (
             <button

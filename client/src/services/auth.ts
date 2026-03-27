@@ -48,4 +48,9 @@ export const authService = {
         const res = await api.get(endpoint)
         return res.data
     },
+
+    updateProfile: async (payload: { full_name?: string; phone_number?: string; nearby_warehouse_id?: number }) => {
+        const res = await api.patch('/users/profile', payload)
+        return res.data
+    },
 }

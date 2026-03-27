@@ -78,26 +78,52 @@ export function SmartImage({
   className = '',
   aspectRatio = 'aspect-square',
   priority = false,
+  fallbackSrc,
   ...props
 }: SmartImageProps) {
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>(
     initialSrc ? 'loading' : 'error'
   );
+  const [retryCount, setRetryCount] = useState(0);
   const [currentSrc, setCurrentSrc] = useState<string | undefined>(
     initialSrc ? String(initialSrc) : undefined
   );
 
   useEffect(() => {
-    const src = initialSrc ? String(initialSrc) : undefined;
+    let src = initialSrc ? String(initialSrc) : undefined;
+    
+    // Auto-optimize Unsplash images for significantly faster load times
+    if (src && src.includes('unsplash.com') && !priority) {
+      if (src.includes('w=1200')) {
+        src = src.replace('w=1200', 'w=600');
+      }
+      if (src.includes('q=80')) {
+        src = src.replace('q=80', 'q=60');
+      }
+    }
+    
+    
     setCurrentSrc(src);
     setStatus(src ? 'loading' : 'error');
-  }, [initialSrc]);
+    setRetryCount(0);
+  }, [initialSrc, priority]);
 
   const handleLoad = () => setStatus('loaded');
 
   const handleError = () => {
-    setStatus('error');
-    setCurrentSrc(undefined);
+    if (fallbackSrc && currentSrc !== fallbackSrc) {
+      setCurrentSrc(fallbackSrc);
+      setStatus('loading');
+    } else if (retryCount === 0) {
+      // Fallback to a reliable realistic placeholder so the site doesn't look broken
+      const seed = encodeURIComponent(alt || 'product').substring(0, 15) + Math.random().toString(36).substring(7);
+      setCurrentSrc(`https://picsum.photos/seed/${seed}/600/600`);
+      setRetryCount(1);
+      setStatus('loading');
+    } else {
+      setStatus('error');
+      setCurrentSrc(undefined);
+    }
   };
 
   return (

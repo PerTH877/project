@@ -21,4 +21,9 @@ export const ordersService = {
     const res = await api.get(`/orders/seller/${orderId}`);
     return res.data;
   },
+
+  updateOrderStatus: async (orderId: number, status: string) => {
+    const res = await api.patch(`/orders/${orderId}/status`, { status });
+    return res.data;
+  },
 };

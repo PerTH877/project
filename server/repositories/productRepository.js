@@ -424,6 +424,127 @@ const getMarketplaceMetrics = async (pool) => {
   return result.rows[0] || {};
 };
 
+const getFeaturedProducts = async (pool) => {
+  const result = await pool.query(
+    `SELECT
+       p.product_id,
+       p.seller_id,
+       s.company_name AS seller_name,
+       s.is_verified AS seller_verified,
+       p.category_id,
+       c.name AS category_name,
+       p.title,
+       p.brand,
+       p.description,
+       p.base_price,
+       p.created_at,
+       p.is_active,
+       media.media_url AS primary_image,
+       (p.base_price + COALESCE(price_bounds.min_adjustment, 0)) AS lowest_price,
+       (p.base_price + COALESCE(price_bounds.max_adjustment, 0)) AS highest_price,
+       reviews_summary.avg_rating,
+       reviews_summary.review_count,
+       stock_summary.total_stock
+     FROM products p
+     JOIN sellers s ON s.seller_id = p.seller_id
+     LEFT JOIN categories c ON c.category_id = p.category_id
+     LEFT JOIN LATERAL (
+       SELECT media_url
+       FROM product_media
+       WHERE product_id = p.product_id AND media_type = 'image'
+       ORDER BY is_primary DESC, display_order ASC, media_id ASC
+       LIMIT 1
+     ) media ON TRUE
+     LEFT JOIN LATERAL (
+       SELECT
+         MIN(COALESCE(price_adjustment, 0)) AS min_adjustment,
+         MAX(COALESCE(price_adjustment, 0)) AS max_adjustment
+       FROM product_variants
+       WHERE product_id = p.product_id AND is_active = TRUE
+     ) price_bounds ON TRUE
+     LEFT JOIN LATERAL (
+       SELECT
+         COALESCE(AVG(r.rating)::numeric(10,2), 0) AS avg_rating,
+         COUNT(*)::int AS review_count
+       FROM reviews r
+       WHERE r.product_id = p.product_id
+     ) reviews_summary ON TRUE
+     LEFT JOIN LATERAL (
+       SELECT COALESCE(SUM(i.stock_quantity), 0)::int AS total_stock
+       FROM product_variants pv
+       LEFT JOIN inventory i ON i.variant_id = pv.variant_id
+       WHERE pv.product_id = p.product_id AND pv.is_active = TRUE
+     ) stock_summary ON TRUE
+     WHERE p.is_featured = TRUE
+       AND p.is_active = TRUE
+     ORDER BY p.created_at DESC, p.product_id DESC`
+  );
+  return result.rows;
+};
+
+const getActiveFlashDeals = async (pool) => {
+  const result = await pool.query(
+    `SELECT
+       p.product_id,
+       p.seller_id,
+       s.company_name AS seller_name,
+       s.is_verified AS seller_verified,
+       p.category_id,
+       c.name AS category_name,
+       p.title,
+       p.brand,
+       p.description,
+       p.base_price,
+       p.created_at,
+       p.is_active,
+       media.media_url AS primary_image,
+       (p.base_price + COALESCE(price_bounds.min_adjustment, 0)) AS lowest_price,
+       (p.base_price + COALESCE(price_bounds.max_adjustment, 0)) AS highest_price,
+       reviews_summary.avg_rating,
+       reviews_summary.review_count,
+       stock_summary.total_stock,
+       fd.discount_percentage,
+       fd.start_time,
+       fd.end_time
+     FROM flash_deals fd
+     JOIN products p ON p.product_id = fd.product_id
+     JOIN sellers s ON s.seller_id = p.seller_id
+     LEFT JOIN categories c ON c.category_id = p.category_id
+     LEFT JOIN LATERAL (
+       SELECT media_url
+       FROM product_media
+       WHERE product_id = p.product_id AND media_type = 'image'
+       ORDER BY is_primary DESC, display_order ASC, media_id ASC
+       LIMIT 1
+     ) media ON TRUE
+     LEFT JOIN LATERAL (
+       SELECT
+         MIN(COALESCE(price_adjustment, 0)) AS min_adjustment,
+         MAX(COALESCE(price_adjustment, 0)) AS max_adjustment
+       FROM product_variants
+       WHERE product_id = p.product_id AND is_active = TRUE
+     ) price_bounds ON TRUE
+     LEFT JOIN LATERAL (
+       SELECT
+         COALESCE(AVG(r.rating)::numeric(10,2), 0) AS avg_rating,
+         COUNT(*)::int AS review_count
+       FROM reviews r
+       WHERE r.product_id = p.product_id
+     ) reviews_summary ON TRUE
+     LEFT JOIN LATERAL (
+       SELECT COALESCE(SUM(i.stock_quantity), 0)::int AS total_stock
+       FROM product_variants pv
+       LEFT JOIN inventory i ON i.variant_id = pv.variant_id
+       WHERE pv.product_id = p.product_id AND pv.is_active = TRUE
+     ) stock_summary ON TRUE
+     WHERE fd.is_active = TRUE
+       AND fd.end_time > CURRENT_TIMESTAMP
+       AND p.is_active = TRUE
+     ORDER BY fd.end_time ASC, fd.discount_percentage DESC, p.product_id DESC`
+  );
+  return result.rows;
+};
+
 module.exports = {
   findCategoryById,
   findWarehousesByIds,
@@ -455,4 +576,6 @@ module.exports = {
   getCategoriesWithSampleMedia,
   getSpotlightSellers,
   getMarketplaceMetrics,
+  getFeaturedProducts,
+  getActiveFlashDeals,
 };

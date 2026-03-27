@@ -18,6 +18,7 @@ import { DataTable, Panel, PageHeader, PageShell, StatCard } from "@/components/
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { categoriesService, productsService, warehousesService } from "@/services/products";
 import { sellerService } from "@/services/seller";
+import { ordersService } from "@/services/orders";
 import type { CreateProductPayload, ProductDetailResponse } from "@/types";
 import { formatCurrencyBDT } from "@/lib/utils";
 
@@ -331,7 +332,7 @@ export default function SellerDashboardPage() {
                   <td>
                     <p className="text-white">{product.total_stock} units</p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {product.review_count} reviews | {product.avg_rating.toFixed(1)} rating
+                      {product.review_count} reviews | {Number(product.avg_rating || 0).toFixed(1)} rating
                     </p>
                   </td>
                   <td>
@@ -365,7 +366,10 @@ export default function SellerDashboardPage() {
                       <p className="font-semibold text-white">{row.title}</p>
                       <p className="mt-1 text-sm text-muted-foreground">{row.sku}</p>
                     </div>
-                    <StatusBadge label={`${row.available_stock} left`} tone={row.available_stock <= 4 ? "rose" : "amber"} />
+                    <div className="flex items-center gap-3">
+                      <StatusBadge label={`${row.available_stock} left`} tone={row.available_stock <= 4 ? "rose" : "amber"} />
+                      <RestockAction variantId={row.variant_id} warehouses={warehouses} />
+                    </div>
                   </div>
                 </div>
               ))}
@@ -383,7 +387,10 @@ export default function SellerDashboardPage() {
                         {row.item_count} lines | {formatCurrencyBDT(row.gross_sales)}
                       </p>
                     </div>
-                    <StatusBadge label={row.shipment_status || row.status} />
+                    <div className="flex items-center gap-2">
+                       <StatusBadge label={row.shipment_status || row.status} />
+                       <ManageOrderAction order={row} />
+                    </div>
                   </div>
                 </div>
               ))}
@@ -725,5 +732,96 @@ function VariantEditorCard({
         </div>
       </div>
     </div>
+  );
+}
+
+function RestockAction({ variantId, warehouses }: { variantId: number; warehouses: Array<{ warehouse_id: number; name: string }> }) {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [warehouseId, setWarehouseId] = useState(0);
+  const [quantity, setQuantity] = useState("");
+
+  const restockMutation = useMutation({
+    mutationFn: (payload: { variant_id: number; warehouse_id: number; quantity: number }) =>
+      sellerService.restockInventory(payload),
+    onSuccess: () => {
+      toast.success("Inventory restocked");
+      queryClient.invalidateQueries({ queryKey: ["seller-dashboard"] });
+      setOpen(false);
+      setQuantity("");
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || "Failed to restock");
+    },
+  });
+
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)} className="rounded-full bg-cyan-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-cyan-300 transition hover:bg-cyan-300/20">
+        Restock
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <select value={warehouseId} onChange={(e) => setWarehouseId(Number(e.target.value))} className="field-select py-1 h-8 text-xs min-w-[120px]">
+        <option value={0}>Warehouse</option>
+        {warehouses.map((w) => (
+          <option key={w.warehouse_id} value={w.warehouse_id}>{w.name}</option>
+        ))}
+      </select>
+      <input type="number" min="1" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="Qty" className="field-input w-16 h-8 py-1 text-xs" />
+      <button 
+        disabled={!warehouseId || !quantity || restockMutation.isPending} 
+        onClick={() => restockMutation.mutate({ variant_id: variantId, warehouse_id: warehouseId, quantity: Number(quantity) })}
+        className="rounded-full bg-cyan-500 px-3 py-1 h-8 text-xs font-semibold text-black hover:bg-cyan-400 disabled:opacity-50"
+      >
+        Save
+      </button>
+      <button onClick={() => setOpen(false)} className="rounded-full bg-white/10 px-3 py-1 h-8 text-xs font-semibold hover:bg-white/20">
+        Cancel
+      </button>
+    </div>
+  );
+}
+
+function ManageOrderAction({ order }: { order: { order_id: number; status: string; shipment_status?: string | null } }) {
+  const queryClient = useQueryClient();
+  const currentStatus = order.shipment_status || order.status;
+  
+  const updateStatusMutation = useMutation({
+    mutationFn: (newStatus: string) => ordersService.updateOrderStatus(order.order_id, newStatus),
+    onSuccess: (data) => {
+      toast.success(`Order marked as ${data.order?.shipment_status || data.order?.status}`);
+      if (data.order?.tracking_number) {
+         toast.info(`Tracking: ${data.order.tracking_number}`);
+      }
+      queryClient.invalidateQueries({ queryKey: ["seller-dashboard"] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || "Failed to update status");
+    },
+  });
+
+  if (currentStatus === "Shipped" || currentStatus === "In_Transit" || currentStatus === "Delivered" || currentStatus === "Cancelled") {
+    return null;
+  }
+
+  const handleNextStatus = () => {
+    if (currentStatus === "Pending") updateStatusMutation.mutate("Processing");
+    else if (currentStatus === "Processing") updateStatusMutation.mutate("Shipped");
+  };
+
+  const nextLabel = currentStatus === "Pending" ? "Process" : "Ship";
+
+  return (
+    <button 
+      disabled={updateStatusMutation.isPending}
+      onClick={handleNextStatus} 
+      className="rounded-full bg-magenta-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-magenta-300 transition hover:bg-magenta-500/20 disabled:opacity-50"
+    >
+      {nextLabel}
+    </button>
   );
 }

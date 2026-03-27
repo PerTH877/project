@@ -36,6 +36,26 @@ const listProducts = async (req, res) => {
   }
 };
 
+const getFeatured = async (req, res, next) => {
+  try {
+    const result = await service.getFeaturedProducts(pool);
+    return res.status(200).json({ success: true, data: result });
+  } catch (err) {
+    if (typeof next === "function") return next(err);
+    return handleError(res, "getFeatured", err);
+  }
+};
+
+const getFlashDeals = async (req, res, next) => {
+  try {
+    const result = await service.getActiveFlashDeals(pool);
+    return res.status(200).json({ success: true, data: result });
+  } catch (err) {
+    if (typeof next === "function") return next(err);
+    return handleError(res, "getFlashDeals", err);
+  }
+};
+
 const getProduct = async (req, res) => {
   const productId = parseId(req.params.product_id);
   if (!productId) {
@@ -70,10 +90,6 @@ const createProduct = async (req, res) => {
       detail: result.detail,
     });
   } catch (err) {
-    // Validation errors thrown by the service (no statusCode) map to 400
-    if (!err.statusCode && err.code !== "23505") {
-      err.statusCode = 400;
-    }
     return handleError(res, "createProduct", err);
   }
 };
@@ -121,9 +137,6 @@ const updateProduct = async (req, res) => {
     const detail = await service.updateProductWithVariants(pool, productId, sellerId, req.body);
     return res.json({ message: "Product updated successfully", detail });
   } catch (err) {
-    if (!err.statusCode && err.code !== "23505") {
-      err.statusCode = 400;
-    }
     return handleError(res, "updateProduct", err);
   }
 };
@@ -162,12 +175,6 @@ const updateVariant = async (req, res) => {
     }
     return res.json({ message: "Variant updated", variant });
   } catch (err) {
-    if (!err.statusCode && err.code !== "23505") {
-      err.statusCode = 400;
-    }
-    if (err.code === "23505") {
-      return res.status(409).json({ error: "SKU already exists. Please use a unique SKU." });
-    }
     return handleError(res, "updateVariant", err);
   }
 };
@@ -186,9 +193,6 @@ const updateVariantInventory = async (req, res) => {
     await service.updateVariantInventory(pool, variantId, sellerId, req.body.inventory);
     return res.json({ message: "Inventory updated" });
   } catch (err) {
-    if (!err.statusCode && err.code !== "23505") {
-      err.statusCode = 400;
-    }
     return handleError(res, "updateVariantInventory", err);
   }
 };
@@ -206,7 +210,6 @@ const createReview = async (req, res) => {
     const review = await service.createReview(pool, userId, productId, req.body);
     return res.status(201).json({ message: "Review submitted", review });
   } catch (err) {
-    if (!err.statusCode) err.statusCode = 400;
     return handleError(res, "createReview", err);
   }
 };
@@ -225,7 +228,6 @@ const askProductQuestion = async (req, res) => {
     const question = await service.askProductQuestion(pool, userId, productId, questionText);
     return res.status(201).json({ message: "Question submitted", question });
   } catch (err) {
-    if (!err.statusCode) err.statusCode = 400;
     return handleError(res, "askProductQuestion", err);
   }
 };
@@ -242,7 +244,6 @@ const answerProductQuestion = async (req, res) => {
     const answer = await service.answerProductQuestion(pool, sellerId, questionId, answerText);
     return res.status(201).json({ message: "Answer posted", answer });
   } catch (err) {
-    if (!err.statusCode) err.statusCode = 400;
     return handleError(res, "answerProductQuestion", err);
   }
 };
@@ -252,6 +253,8 @@ const answerProductQuestion = async (req, res) => {
 module.exports = {
   getHomeFeed,
   listProducts,
+  getFeatured,
+  getFlashDeals,
   getProduct,
   createProduct,
   listSellerProducts,

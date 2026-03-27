@@ -27,10 +27,6 @@ export const cartService = {
     return res.data;
   },
 
-  checkout: async (address_id: number, payment_method: string) => {
-    const res = await api.post("/cart/checkout", { address_id, payment_method });
-    return res.data;
-  },
 
   toggleSaveForLater: async (cart_id: number, is_saved: boolean) => {
     const res = await api.patch(`/cart/${cart_id}/save`, { is_saved });

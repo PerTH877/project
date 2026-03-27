@@ -109,7 +109,7 @@ export function ProductCard({ product, density, compact = false }: ProductCardPr
         <div className="mt-2 flex items-center gap-2 text-[12px]">
           <div className="flex items-center text-amber-400">
             <Star className="h-3.5 w-3.5 fill-amber-400" />
-            <span className="ml-1 font-bold">{product.avg_rating.toFixed(1)}</span>
+            <span className="ml-1 font-bold">{Number(product.avg_rating || 0).toFixed(1)}</span>
           </div>
           <span className="text-cyan-400/80 hover:underline cursor-pointer">{product.review_count} ratings</span>
         </div>

@@ -4,10 +4,26 @@ import { Link } from "react-router-dom";
 import { productsService } from "@/services/products";
 import { useAuthStore } from "@/store/authStore";
 import { ChevronRight, Star, ChevronLeft } from "lucide-react";
+import { HeroShowcase } from "@/components/commerce/HeroShowcase";
+import { TodaysDealsSection } from "@/components/commerce/TodaysDealsSection";
 
 export default function HomePage() {
   const { token } = useAuthStore();
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
+  
+  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchRealData = async () => {
+      try {
+        const featuredRes = await productsService.getFeaturedProducts();
+        setFeaturedProducts(Array.isArray(featuredRes) ? featuredRes : featuredRes?.data || []);
+      } catch (err) {
+        console.error("Failed to fetch featured products", err);
+      }
+    };
+    fetchRealData();
+  }, []);
 
   const homeQuery = useQuery({
     queryKey: ["home-feed"],
@@ -56,38 +72,12 @@ export default function HomePage() {
       
       {/* 1. Cyberpunk Hero Banner Carousel */}
       <section className="shell-width mt-6 mb-8 relative group">
-        <div className="hero-shell h-[320px] md:h-[430px] w-full flex items-center p-8 md:p-16 relative overflow-hidden">
-          <div className="hero-grid"></div>
-          <div className="hero-scanlines"></div>
-          <div className="hero-beam"></div>
-          
-          {currentHero && (
-            <Link to={`/products/${currentHero.product_id}`} className="absolute inset-0 z-0 flex shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] transition-opacity duration-1000 cursor-pointer">
-              <img src={currentHero.primary_image || undefined} alt={currentHero.title} className="w-full h-full object-cover opacity-50 mix-blend-screen hover:opacity-75 transition-opacity" />
-            </Link>
-          )}
+        <HeroShowcase featuredProducts={featuredProducts} />
+      </section>
 
-          <div className="relative z-10 max-w-2xl pointer-events-none">
-            <h2 className="text-4xl md:text-6xl font-black display-font mb-4 text-white drop-shadow-[0_0_15px_rgba(0,255,255,0.8)] leading-tight">
-              NEON <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-magenta-500">FRIDAY</span> DEALS
-            </h2>
-            <p className="text-lg text-slate-300 font-mono mb-8 max-w-md">Override the system limits. Get premium gear with Next-Day Warehouse Delivery.</p>
-          </div>
-          
-          <div className="absolute z-20 bottom-8 left-0 right-0 flex justify-center gap-2 pointer-events-auto">
-            {heroSlides.map((_, idx) => (
-              <button key={idx} onClick={() => setCurrentHeroIndex(idx)} className={`w-3 h-3 rounded-full transition-all ${idx === currentHeroIndex ? 'bg-cyan-400 shadow-[0_0_10px_#00FFFF]' : 'bg-white/30 hover:bg-white/60'}`} />
-            ))}
-          </div>
-
-          {/* Nav Buttons */}
-          <button onClick={() => setCurrentHeroIndex((prev) => (prev - 1 + heroSlides.length) % heroSlides.length)} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/50 border border-cyan-500/30 text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 hover:shadow-[0_0_15px_rgba(0,255,255,0.5)] pointer-events-auto">
-            <ChevronLeft className="w-8 h-8" />
-          </button>
-          <button onClick={() => setCurrentHeroIndex((prev) => (prev + 1) % heroSlides.length)} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-black/50 border border-cyan-500/30 text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 hover:shadow-[0_0_15px_rgba(0,255,255,0.5)] pointer-events-auto">
-            <ChevronRight className="w-8 h-8" />
-          </button>
-        </div>
+      {/* Today's Deals Section */}
+      <section className="shell-width mb-14 relative z-10">
+        <TodaysDealsSection />
       </section>
 
       {/* 2. Amazon Square Category Cards (4-grid layout) */}
@@ -137,7 +127,7 @@ export default function HomePage() {
                    <p className="text-sm font-semibold text-slate-200 line-clamp-2 mb-2 flex-1 hover:text-cyan-400 transition-colors">{prod.title}</p>
                    <div className="flex items-center text-amber-400 mb-2">
                      <Star className="w-3 h-3 fill-current mr-1" />
-                     <span className="text-xs font-mono">{prod.avg_rating.toFixed(1)}</span>
+                     <span className="text-xs font-mono">{Number(prod.avg_rating || 0).toFixed(1)}</span>
                    </div>
                    <p className="text-lg font-bold text-cyan-400 display-font mt-auto"><span className="text-xs text-slate-500 mr-1">BDT</span>{prod.lowest_price}</p>
                  </Link>

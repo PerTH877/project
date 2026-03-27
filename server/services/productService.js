@@ -305,6 +305,14 @@ const getProductList = async (pool, query) => {
   return fetchProductList(pool, query, pagination);
 };
 
+const getFeaturedProducts = async (pool) => {
+  return repo.getFeaturedProducts(pool);
+};
+
+const getActiveFlashDeals = async (pool) => {
+  return repo.getActiveFlashDeals(pool);
+};
+
 
 
 const getProductDetail = async (pool, productId, opts = {}) => {
@@ -681,6 +689,8 @@ const answerProductQuestion = async (pool, sellerId, questionId, answerText) => 
 module.exports = {
   getHomeFeedData,
   getProductList,
+  getFeaturedProducts,
+  getActiveFlashDeals,
   getProductDetail,
   createProductWithVariants,
   getSellerProductList,

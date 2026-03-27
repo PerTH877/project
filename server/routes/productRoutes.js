@@ -6,6 +6,8 @@ const { validateCreateProduct } = require("../validators/productValidator");
 const {
   getHomeFeed,
   listProducts,
+  getFeatured,
+  getFlashDeals,
   getProduct,
   createProduct,
   listSellerProducts,
@@ -21,6 +23,8 @@ const {
 
 router.get("/home", getHomeFeed);
 router.get("/", listProducts);
+router.get("/featured", getFeatured);
+router.get("/deals", getFlashDeals);
 
 router.get(
   "/seller/mine",

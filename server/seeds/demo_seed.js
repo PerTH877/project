@@ -44,6 +44,7 @@ async function cleanup() {
   await query('DELETE FROM Order_Items');
   await query('DELETE FROM Orders');
   await query('DELETE FROM Users');
+  await query('DELETE FROM Flash_Deals');  // explicit cleanup before Products cascade
   await query('DELETE FROM Inventory');
   await query('DELETE FROM Product_Specifications');
   await query('DELETE FROM Product_Media');
@@ -180,7 +181,7 @@ async function seedProducts(catMap, sellerMap, warehouseIds) {
         { key: 'Battery', value: 'Up to 22 hours' }, { key: 'OS', value: 'macOS Sonoma' },
         { key: 'Ports', value: 'Thunderbolt 4, HDMI, SD Card, MagSafe 3' }, { key: 'Weight', value: '1.55 kg' },
       ],
-      stock: [45, 20, 10],
+      stock: [2, 1, 0],  // deliberately low to trigger "Low Stock" alert in UI
     },
 
     // 2 ─────────────────────────────────────────────────────────────────────
@@ -479,7 +480,7 @@ async function seedProducts(catMap, sellerMap, warehouseIds) {
         { key: 'Video', value: '6K RAW, 4K 60p, 1080p 180p' }, { key: 'Stabilization', value: '8-stop In-Body IS' },
         { key: 'Weather Sealing', value: 'Yes (dust + drip resistant)' },
       ],
-      stock: [12, 6, 3],
+      stock: [2, 1, 0],  // deliberately low to trigger "Low Stock" alert in UI
     },
 
     // 15 ────────────────────────────────────────────────────────────────────
@@ -521,7 +522,7 @@ async function seedProducts(catMap, sellerMap, warehouseIds) {
         { key: 'RAM', value: '16 GB GDDR6' }, { key: 'SSD', value: '825 GB Custom (5.5 GB/s)' },
         { key: 'Optical Drive', value: '4K UHD Blu-ray' }, { key: 'Resolution', value: 'Up to 8K, 4K @ 120 fps' },
       ],
-      stock: [25, 12, 6],
+      stock: [2, 1, 0],  // deliberately low to trigger "Low Stock" alert in UI
     },
 
     // 17 ────────────────────────────────────────────────────────────────────
@@ -659,17 +660,24 @@ async function seedProducts(catMap, sellerMap, warehouseIds) {
     },
   ];
 
-  for (const p of products) {
+  const featuredCount = Math.min(products.length, 3 + Math.floor(Math.random() * 3));
+  const featuredIndexes = new Set();
+  while (featuredIndexes.size < featuredCount) {
+    featuredIndexes.add(Math.floor(Math.random() * products.length));
+  }
+
+  for (const [index, p] of products.entries()) {
     const sellerId   = S[p.seller];
     const categoryId = C[p.category];
+    const isFeatured = featuredIndexes.has(index);
     if (!sellerId)   throw new Error(`Seller not found: "${p.seller}"`);
     if (!categoryId) throw new Error(`Category not found: "${p.category}"`);
 
     // Insert Product
     const product = await insertReturningId(
-      `INSERT INTO Products (seller_id, category_id, title, brand, description, base_price, is_active)
-       VALUES ($1,$2,$3,$4,$5,$6,TRUE)`,
-      [sellerId, categoryId, p.title, p.brand, p.description, p.base_price]
+      `INSERT INTO Products (seller_id, category_id, title, brand, description, base_price, is_active, is_featured)
+       VALUES ($1,$2,$3,$4,$5,$6,TRUE,$7)`,
+      [sellerId, categoryId, p.title, p.brand, p.description, p.base_price, isFeatured]
     );
     const productId = product.product_id;
     log(`Product [${productId}]: ${p.title}`);
@@ -864,6 +872,43 @@ async function seedOrderItems(orderIds, variantIds) {
   log(`Order items created: ${itemCount}`);
 }
 
+async function seedFlashDeals() {
+  console.log('\n[9/9] Seeding Flash_Deals…');
+
+  // Target specific high-visibility products for the demo
+  const targetTitles = [
+    'Apple MacBook Pro M3 14-inch',
+    'Sony PlayStation 5 Console (Disc Edition)',
+    'Samsung Galaxy S24 Ultra',
+    'Canon EOS R6 Mark II Mirrorless Camera Body',
+    'Samsung 55-inch QLED 4K Smart TV Q80C',
+  ];
+
+  const pickedProducts = await query(
+    `SELECT product_id, title
+     FROM Products
+     WHERE title = ANY($1::text[])
+     ORDER BY product_id ASC`,
+    [targetTitles]
+  );
+
+  // Fixed discount ladder for reproducible demo results: 15%, 20%, 30%, 35%, 40%
+  const discountLadder = [15, 20, 30, 35, 40];
+
+  for (let i = 0; i < pickedProducts.rows.length; i++) {
+    const row = pickedProducts.rows[i];
+    const discountPercentage = discountLadder[i % discountLadder.length];
+
+    await query(
+      `INSERT INTO Flash_Deals (product_id, discount_percentage, end_time, is_active)
+       VALUES ($1,$2,NOW() + INTERVAL '24 hours',TRUE)`,
+      [row.product_id, discountPercentage]
+    );
+
+    log(`Flash deal: "${row.title}" | discount=${discountPercentage}% | ends in 24h`);
+  }
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -886,6 +931,7 @@ async function main() {
     const userIds      = await seedUsers();
     const orderIds     = await seedOrders(userIds);
     await seedOrderItems(orderIds, variantIds);
+    await seedFlashDeals();
 
     console.log('\n✅  Seed complete!');
     console.log('   ─────────────────────────────────────────');
@@ -895,6 +941,7 @@ async function main() {
     console.log('   Products:         22  (with variants, media, specs, inventory)');
     console.log('   Users:            10  (dummy buyers)');
     console.log('   Orders:           45  (last 30 days)');
+    console.log('   Flash deals:       5  (random active deals)');
     console.log('   Status mix:       Delivered/Pending/Returned');
     console.log('   Image source:      Unsplash CDN (hotlink-safe)');
     console.log('   ─────────────────────────────────────────\n');
