@@ -1,11 +1,50 @@
 const cartRepository = require("../repositories/cart.repository");
 
 async function getCartItems(pool, userId) {
-  const cartItems = await cartRepository.getCartItems(pool, userId);
-  return {
-    items: cartItems,
-    count: cartItems.length,
+  const rows = await cartRepository.getCartItems(pool, userId);
+
+  const items = rows.map((row) => {
+    const unit_price = Number(row.base_price) + Number(row.price_adjustment || 0);
+    const line_total = Math.round(unit_price * row.quantity * 100) / 100;
+
+    return {
+      cart_id: row.cart_id,
+      quantity: row.quantity,
+      added_at: row.added_at,
+      is_saved: row.is_saved,
+      unit_price,
+      line_total,
+      availability: {
+        in_stock: row.available_stock > 0,
+        available_stock: row.available_stock,
+      },
+      variant: {
+        variant_id: row.variant_id,
+        sku: row.sku,
+        attributes: row.attributes || {},
+        price_adjustment: row.price_adjustment,
+        is_active: row.variant_is_active,
+      },
+      product: {
+        product_id: row.product_id,
+        seller_id: row.seller_id,
+        seller_name: row.seller_name,
+        title: row.title,
+        brand: row.brand || null,
+        base_price: row.base_price,
+        primary_image: row.primary_image || null,
+      },
+    };
+  });
+
+  const activeItems = items.filter((item) => !item.is_saved);
+  const summary = {
+    item_count: activeItems.length,
+    quantity_total: activeItems.reduce((sum, item) => sum + item.quantity, 0),
+    subtotal: Math.round(activeItems.reduce((sum, item) => sum + item.line_total * 100, 0)) / 100,
   };
+
+  return { items, summary };
 }
 
 async function getCartTotal(pool, userId) {

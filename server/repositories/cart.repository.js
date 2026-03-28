@@ -2,30 +2,48 @@ async function getCartItems(pool, userId) {
   const result = await pool.query(
     `SELECT
        c.cart_id,
-       c.variant_id,
        c.quantity,
        c.is_saved,
        c.added_at,
+       pv.variant_id,
        pv.sku,
        pv.price_adjustment,
        pv.attributes,
+       pv.is_active AS variant_is_active,
        p.product_id,
+       p.seller_id,
        p.title,
+       p.brand,
        p.base_price,
+       s.company_name AS seller_name,
+       pm.media_url AS primary_image,
        COALESCE(SUM(i.stock_quantity), 0)::int AS available_stock
      FROM cart c
      JOIN product_variants pv ON pv.variant_id = c.variant_id
      JOIN products p ON p.product_id = pv.product_id
+     JOIN sellers s ON s.seller_id = p.seller_id
+     LEFT JOIN LATERAL (
+       SELECT media_url
+       FROM product_media
+       WHERE product_id = p.product_id AND is_primary = TRUE
+       LIMIT 1
+     ) pm ON TRUE
      LEFT JOIN inventory i ON i.variant_id = pv.variant_id
      WHERE c.user_id = $1
-     GROUP BY c.cart_id, pv.variant_id, p.product_id`,
+     GROUP BY c.cart_id, pv.variant_id, p.product_id, s.seller_id, pm.media_url
+     ORDER BY c.added_at DESC`,
     [userId]
   );
   return result.rows;
 }
 
 async function getCartTotal(client, userId) {
-  const result = await client.query("SELECT get_cart_total($1) AS total", [userId]);
+  const result = await client.query(
+    `SELECT COALESCE(SUM(quantity), 0)::int AS total
+     FROM cart
+     WHERE user_id = $1 AND is_saved = FALSE`,
+    [userId]
+  );
   return Number(result.rows[0]?.total ?? 0);
 }
 
