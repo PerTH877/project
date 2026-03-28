@@ -2,18 +2,18 @@
 
 const checkoutRepository = require("../repositories/checkout.repository");
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+
 
 const VALID_PAYMENT_METHODS = ["Cash on Delivery", "Credit Card", "bKash"];
 const STANDARD_SHIPPING_COST = 50.0;
 
-// ─── Review ───────────────────────────────────────────────────────────────────
 
-/**
- * Compute the checkout summary (subtotal, shipping, total) for the review step.
- * Shipping is a flat BDT 50. Prime / subscription logic is deliberately omitted
- * until the User_Subscriptions schema is in place.
- */
+
+
+
+
+
+
 async function reviewCheckoutSummary(pool, userId) {
   let client;
   try {
@@ -35,16 +35,16 @@ async function reviewCheckoutSummary(pool, userId) {
   }
 }
 
-// ─── Execute ──────────────────────────────────────────────────────────────────
 
-/**
- * Execute the full checkout transaction:
- *  1. Validate address ownership
- *  2. Validate cart is non-empty
- *  3. Verify and lock inventory for every cart item
- *  4. Call proc_create_order to create the order and clear the cart
- *  5. Deduct inventory, create payment record, create shipment record
- */
+
+
+
+
+
+
+
+
+
 async function executeCheckout(pool, userId, addressId, paymentMethod = "Cash on Delivery") {
   if (!VALID_PAYMENT_METHODS.includes(paymentMethod)) {
     const err = new Error(
@@ -59,7 +59,7 @@ async function executeCheckout(pool, userId, addressId, paymentMethod = "Cash on
     client = await pool.connect();
     await client.query("BEGIN");
 
-    // ── 1. Validate address ────────────────────────────────────────────────
+    
     const address = await checkoutRepository.getAddressById(client, addressId, userId);
     if (!address || !address.is_active) {
       const err = new Error("Please choose a valid active address");
@@ -67,7 +67,7 @@ async function executeCheckout(pool, userId, addressId, paymentMethod = "Cash on
       throw err;
     }
 
-    // ── 2. Validate cart ───────────────────────────────────────────────────
+    
     const cartItems = await checkoutRepository.getCartItemsForCheckout(client, userId);
     if (cartItems.length === 0) {
       const err = new Error("Cart is empty. Add items before checkout.");
@@ -75,7 +75,7 @@ async function executeCheckout(pool, userId, addressId, paymentMethod = "Cash on
       throw err;
     }
 
-    // ── 3. Inventory check & allocation plan ──────────────────────────────
+    
     const allocations = [];
     for (const item of cartItems) {
       const inventoryRows = await checkoutRepository.getInventoryForVariant(
@@ -110,13 +110,13 @@ async function executeCheckout(pool, userId, addressId, paymentMethod = "Cash on
       }
     }
 
-    // ── 4. Create order (stored proc clears cart) ─────────────────────────
+    
     const order = await checkoutRepository.createOrder(client, userId, addressId);
     if (!order) {
       throw new Error("Failed to create order record");
     }
 
-    // ── 5. Deduct inventory, payment, shipment ────────────────────────────
+    
     for (const alloc of allocations) {
       await checkoutRepository.updateInventoryStock(
         client,
@@ -169,12 +169,12 @@ async function executeCheckout(pool, userId, addressId, paymentMethod = "Cash on
   }
 }
 
-// ─── Address / Payment validation helpers (stateless) ────────────────────────
 
-/**
- * Validate that an address belongs to the user.
- * Used in the multi-step checkout address-selection step.
- */
+
+
+
+
+
 async function validateAddress(pool, addressId, userId) {
   let client;
   try {
@@ -191,9 +191,9 @@ async function validateAddress(pool, addressId, userId) {
   }
 }
 
-/**
- * Validate the payment method string.
- */
+
+
+
 function validatePaymentMethod(paymentMethod) {
   if (!VALID_PAYMENT_METHODS.includes(paymentMethod)) {
     const err = new Error(

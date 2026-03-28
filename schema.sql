@@ -291,18 +291,7 @@ CREATE TABLE Seller_Payouts (
     reference_number VARCHAR(100)
 );
 
--- --------------------------------------------------------------------
--- Additional database features for project checklist compliance
---
--- The following definitions add a table for auditing order changes,
--- a trigger to automatically populate the audit table whenever the
--- orders table is modified, a function to compute the total value of
--- a user's cart, and a stored procedure to perform a multi‑step
--- checkout workflow.  These constructs demonstrate proper use of
--- triggers, functions, procedures and complex queries as required by
--- the project checklist.
 
--- Audit table to log inserts, updates and deletions on the Orders table.
 CREATE TABLE IF NOT EXISTS order_audit (
     audit_id SERIAL PRIMARY KEY,
     order_id INTEGER,
@@ -310,10 +299,7 @@ CREATE TABLE IF NOT EXISTS order_audit (
     changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Trigger function to write a row into order_audit whenever the Orders
--- table is modified.  Depending on the triggering event the action
--- column is set appropriately.  This trigger runs after the main
--- operation completes.
+
 CREATE OR REPLACE FUNCTION log_order_changes() RETURNS TRIGGER AS $$
 BEGIN
     IF TG_OP = 'INSERT' THEN
@@ -327,16 +313,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger definition on Orders table using the above trigger function.
+
+
 DROP TRIGGER IF EXISTS trg_orders_audit ON orders;
 CREATE TRIGGER trg_orders_audit
 AFTER INSERT OR UPDATE OR DELETE ON orders
 FOR EACH ROW EXECUTE FUNCTION log_order_changes();
 
--- Function to compute the current total price of a user's cart.  It
--- multiplies the quantity of each cart item by the sum of the base
--- price and any price adjustment defined on the variant.  If the
--- user has no items in their cart the function returns 0.00.
+
+
 CREATE OR REPLACE FUNCTION get_cart_total(p_user_id INTEGER)
 RETURNS DECIMAL(10,2) AS $$
 DECLARE
@@ -362,15 +347,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Procedure to create an order for a user.  The procedure inserts a
--- new row into Orders, then iterates over the user's current cart
--- items, inserting a corresponding row in Order_Items for each.  It
--- calculates the platform fee based on the category commission
--- percentage, updates the total amount on the order and finally
--- clears the cart.  The procedure uses local variables and a FOR loop
--- and is an example of a multi‑step workflow requiring transaction
--- control.  When called from the application the procedure should be
--- invoked inside a transaction so that errors cause a rollback.
+
+
 CREATE OR REPLACE PROCEDURE proc_create_order(
     IN p_user_id INTEGER,
     IN p_address_id INTEGER,
@@ -381,13 +359,10 @@ DECLARE
     cart_rec RECORD;
     fee_percent DECIMAL(5,2);
 BEGIN
-    -- Insert a new order with an initial zero total.  The status is
-    -- left as the default 'Pending'.
     INSERT INTO orders (user_id, address_id, total_amount)
     VALUES (p_user_id, p_address_id, 0)
     RETURNING order_id INTO new_order_id;
 
-    -- Iterate through each cart item and copy it into Order_Items.
     FOR cart_rec IN
         SELECT c.variant_id, c.quantity,
                ((p.base_price + COALESCE(pv.price_adjustment, 0)) * 
@@ -411,7 +386,6 @@ BEGIN
         VALUES (new_order_id, cart_rec.variant_id, cart_rec.quantity, cart_rec.unit_price, fee_percent);
     END LOOP;
 
-    -- Update the total amount for the order based on the inserted items.
     UPDATE orders
     SET total_amount = (
         SELECT COALESCE(SUM(quantity * unit_price), 0)
@@ -420,7 +394,6 @@ BEGIN
     )
     WHERE order_id = new_order_id;
 
-    -- Clear the cart for the user since all items have been moved to the order.
     DELETE FROM cart WHERE user_id = p_user_id;
 END;
 $$;

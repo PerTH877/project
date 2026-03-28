@@ -13,7 +13,7 @@ const createUser = async ({ full_name, email, password_hash, phone_number, nearb
   try {
     await client.query("BEGIN");
 
-    // Guard against duplicate email within the transaction
+    
     const existing = await client.query(
       "SELECT user_id FROM users WHERE email = $1",
       [email]
@@ -54,9 +54,9 @@ const findById = async (userId) => {
   return result.rows[0] || null;
 };
 
-/**
- * Update allowed profile fields for a user.
- */
+
+
+
 const updateProfile = async (userId, { full_name, phone_number, nearby_warehouse_id }) => {
   const setClauses = [];
   const params = [];

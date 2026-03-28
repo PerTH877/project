@@ -181,9 +181,9 @@ const getSellerOrderDetail = async (sellerId, orderId) => {
   };
 };
 
-/**
- * Verify that the given order contains at least one product belonging to sellerId.
- */
+
+
+
 const verifySellerOwnsOrder = async (orderId, sellerId) => {
   const result = await pool.query(
     `SELECT 1
@@ -197,9 +197,9 @@ const verifySellerOwnsOrder = async (orderId, sellerId) => {
   return result.rows.length > 0;
 };
 
-/**
- * Update the status column of an order and return the updated row.
- */
+
+
+
 const updateOrderStatus = async (orderId, newStatus) => {
   const result = await pool.query(
     `UPDATE orders
@@ -211,9 +211,9 @@ const updateOrderStatus = async (orderId, newStatus) => {
   return result.rows[0] || null;
 };
 
-/**
- * Insert a new Shipment record for an order.
- */
+
+
+
 const createShipment = async (orderId, trackingNumber) => {
   const result = await pool.query(
     `INSERT INTO shipments (order_id, status, tracking_number)

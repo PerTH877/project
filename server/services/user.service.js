@@ -44,7 +44,7 @@ const registerUser = async ({ full_name, email, password, phone_number, nearby_w
     });
     return user;
   } catch (err) {
-    // Map DB constraint codes to domain errors
+    
     if (err.code === "23505" || err.code === "DUPLICATE_EMAIL") {
       const e = new Error("User already exists");
       e.statusCode = 409;
@@ -104,9 +104,9 @@ const getCurrentUser = async (userId) => {
   return user;
 };
 
-/**
- * Update allowed profile fields. At least one field must be provided.
- */
+
+
+
 const updateProfile = async (userId, data) => {
   const { full_name, phone_number, nearby_warehouse_id } = data;
 

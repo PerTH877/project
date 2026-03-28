@@ -2,7 +2,7 @@ const cron = require('node-cron');
 const pool = require('../config/db');
 
 function startSubscriptionExpirationCron() {
-  // Runs every day at 00:00 (midnight)
+  
   cron.schedule('0 0 * * *', async () => {
     try {
       const query = `

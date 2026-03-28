@@ -30,9 +30,9 @@ const createWarehouse = async ({ name, street_address, city, zip_code, capacity 
   return result.rows[0];
 };
 
-/**
- * Find an inventory row by variant_id + warehouse_id.
- */
+
+
+
 const findInventoryRow = async (variantId, warehouseId) => {
   const result = await pool.query(
     `SELECT inventory_id, stock_quantity
@@ -44,9 +44,9 @@ const findInventoryRow = async (variantId, warehouseId) => {
   return result.rows[0] || null;
 };
 
-/**
- * Increment stock_quantity by `qty` for the given inventory row.
- */
+
+
+
 const incrementStock = async (inventoryId, qty) => {
   const result = await pool.query(
     `UPDATE inventory

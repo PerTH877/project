@@ -1,10 +1,10 @@
 const pool = require("../config/db");
 
-/**
- * Repository Layer - Database queries and pool operations only.
- * No business logic, no req/res objects, no formatting.
- * For transaction operations, accept client as parameter.
- */
+
+
+
+
+
 
 const listPendingSellers = async () => {
   const result = await pool.query(

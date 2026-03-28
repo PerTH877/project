@@ -2,14 +2,14 @@ const jwt = require("jsonwebtoken");
 const pool = require("../config/db");
 const adminRepository = require("../repositories/admin.repository");
 
-/**
- * Service Layer - Business logic, data formatting, and transaction management.
- * No Express req/res objects. Calls repository methods.
- */
+
+
+
+
 
 const asNumber = (value) => Number(value ?? 0);
 
-// JWT signing and credential verification
+
 const generateAdminToken = (email) => {
   if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
     throw new Error("Admin credentials are not configured on the server");
@@ -34,7 +34,7 @@ const verifyAdminCredentials = (email, password) => {
   }
 };
 
-// Transaction-based seller verification
+
 const processSellerVerification = async (sellerId) => {
   let client;
   try {
@@ -58,7 +58,7 @@ const processSellerVerification = async (sellerId) => {
   }
 };
 
-// Analytics data formatting and mapping
+
 const formatAdminOverview = async () => {
   const data = await adminRepository.getAdminOverviewData();
   const { summary, warehouses } = data;

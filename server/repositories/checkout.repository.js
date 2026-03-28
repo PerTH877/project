@@ -1,13 +1,13 @@
 "use strict";
 
-// ─── Checkout Repository ───────────────────────────────────────────────────────
-// All SQL for the order-execution and review flows lives here.
-// This is fully decoupled from cart.repository.js so that changes to the
-// checkout domain cannot accidentally break cart CRUD operations.
 
-/**
- * Fetch a single address that belongs to the given user.
- */
+
+
+
+
+
+
+
 async function getAddressById(client, addressId, userId) {
   const result = await client.query(
     `SELECT address_id, city, is_active
@@ -18,9 +18,9 @@ async function getAddressById(client, addressId, userId) {
   return result.rows[0] || null;
 }
 
-/**
- * Fetch the active (non-saved) cart items for a user, ready for checkout.
- */
+
+
+
 async function getCartItemsForCheckout(client, userId) {
   const result = await client.query(
     `SELECT
@@ -43,10 +43,10 @@ async function getCartItemsForCheckout(client, userId) {
   return result.rows;
 }
 
-/**
- * Fetch all inventory rows for a variant with a FOR UPDATE lock to prevent
- * concurrent oversells during checkout transactions.
- */
+
+
+
+
 async function getInventoryForVariant(client, variantId) {
   const result = await client.query(
     `SELECT inventory_id, warehouse_id, stock_quantity
@@ -59,10 +59,10 @@ async function getInventoryForVariant(client, variantId) {
   return result.rows;
 }
 
-/**
- * Call the stored procedure to create the order and then retrieve the newly
- * created order row.
- */
+
+
+
+
 async function createOrder(client, userId, addressId) {
   await client.query("CALL proc_create_order($1, $2, NULL)", [userId, addressId]);
 
@@ -77,9 +77,9 @@ async function createOrder(client, userId, addressId) {
   return result.rows[0] || null;
 }
 
-/**
- * Decrement a specific inventory row to the new stock quantity.
- */
+
+
+
 async function updateInventoryStock(client, inventoryId, newStock) {
   await client.query(
     `UPDATE inventory
@@ -89,9 +89,9 @@ async function updateInventoryStock(client, inventoryId, newStock) {
   );
 }
 
-/**
- * Insert a payment record for the given order.
- */
+
+
+
 async function createPayment(client, orderId, paymentMethod, amount) {
   await client.query(
     `INSERT INTO payments (order_id, payment_method, status, amount)
@@ -100,9 +100,9 @@ async function createPayment(client, orderId, paymentMethod, amount) {
   );
 }
 
-/**
- * Insert a shipment record for the given order.
- */
+
+
+
 async function createShipment(client, orderId, trackingNumber, carrier, estimatedArrival) {
   await client.query(
     `INSERT INTO shipments (order_id, tracking_number, carrier, estimated_arrival, status)
@@ -111,10 +111,10 @@ async function createShipment(client, orderId, trackingNumber, carrier, estimate
   );
 }
 
-/**
- * Compute a lightweight cart subtotal for the checkout review step.
- * Uses base_price + price_adjustment per cart line so no stored function is needed.
- */
+
+
+
+
 async function getCartSubtotal(client, userId) {
   const result = await client.query(
     `SELECT COALESCE(
