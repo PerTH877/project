@@ -145,6 +145,7 @@ CREATE TABLE Cart (
     user_id INTEGER REFERENCES Users(user_id) ON DELETE CASCADE,
     variant_id INTEGER REFERENCES Product_Variants(variant_id) ON DELETE CASCADE,
     quantity INTEGER NOT NULL CHECK (quantity > 0),
+    is_saved BOOLEAN DEFAULT FALSE,
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -357,7 +358,7 @@ BEGIN
         WHERE is_active = TRUE AND end_time > CURRENT_TIMESTAMP
         GROUP BY product_id
     ) fd ON fd.product_id = p.product_id
-    WHERE c.user_id = p_user_id;
+    WHERE c.user_id = p_user_id AND c.is_saved = FALSE;
     RETURN total;
 END;
 $$ LANGUAGE plpgsql;
@@ -404,7 +405,7 @@ BEGIN
         ) fd ON fd.product_id = p.product_id
         LEFT JOIN categories cat ON p.category_id = cat.category_id
         LEFT JOIN category_fees cf ON cf.category_id = cat.category_id
-        WHERE c.user_id = p_user_id
+        WHERE c.user_id = p_user_id AND c.is_saved = FALSE
     LOOP
         fee_percent := COALESCE(cart_rec.fee_percentage, 0);
         INSERT INTO order_items (order_id, variant_id, quantity, unit_price, platform_fee_percent)
@@ -420,7 +421,7 @@ BEGIN
     )
     WHERE order_id = new_order_id;
 
-    -- Clear the cart for the user since all items have been moved to the order.
-    DELETE FROM cart WHERE user_id = p_user_id;
+    -- Clear only active cart items for the user since they have been moved to the order.
+    DELETE FROM cart WHERE user_id = p_user_id AND is_saved = FALSE;
 END;
 $$;
