@@ -12,13 +12,23 @@ async function getCartItems(pool, userId) {
        p.product_id,
        p.title,
        p.base_price,
+       s.company_name AS seller_name,
+       media.media_url AS primary_image,
        COALESCE(SUM(i.stock_quantity), 0)::int AS available_stock
      FROM cart c
      JOIN product_variants pv ON pv.variant_id = c.variant_id
      JOIN products p ON p.product_id = pv.product_id
+     JOIN sellers s ON s.seller_id = p.seller_id
+     LEFT JOIN LATERAL (
+       SELECT media_url
+       FROM product_media
+       WHERE product_id = p.product_id AND media_type = 'image'
+       ORDER BY is_primary DESC, display_order ASC, media_id ASC
+       LIMIT 1
+     ) media ON TRUE
      LEFT JOIN inventory i ON i.variant_id = pv.variant_id
      WHERE c.user_id = $1
-     GROUP BY c.cart_id, pv.variant_id, p.product_id`,
+     GROUP BY c.cart_id, pv.variant_id, p.product_id, s.company_name, media.media_url`,
     [userId]
   );
   return result.rows;

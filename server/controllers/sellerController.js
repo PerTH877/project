@@ -13,7 +13,7 @@ const normalizeText = (value) => {
 
 
 
-const registerSeller = async (req, res) => {
+const registerSeller = async (req, res, next) => {
   const companyName = normalizeText(req.body.company_name);
   const contactEmail = normalizeEmail(req.body.contact_email);
   const password = String(req.body.password || "");
@@ -65,11 +65,12 @@ const registerSeller = async (req, res) => {
     if (client) {
       await client.query("ROLLBACK");
     }
-    console.error("registerSeller:", err.message);
     if (err.code === "23505") {
-      return res.status(409).json({ error: "A seller with this email already exists" });
+      const e = new Error("A seller with this email already exists");
+      e.statusCode = 409;
+      return next(e);
     }
-    return res.status(500).json({ error: "Failed to register seller" });
+    return next(err);
   } finally {
     if (client) {
       client.release();
@@ -77,7 +78,7 @@ const registerSeller = async (req, res) => {
   }
 };
 
-const loginSeller = async (req, res) => {
+const loginSeller = async (req, res, next) => {
   try {
     const email = normalizeEmail(req.body.email);
     const password = String(req.body.password || "");
@@ -136,12 +137,11 @@ const loginSeller = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("loginSeller:", err.message);
-    return res.status(500).json({ error: "Failed to log in seller" });
+    return next(err);
   }
 };
 
-const getSellerProfile = async (req, res) => {
+const getSellerProfile = async (req, res, next) => {
   const sellerId = req.user?.seller_id;
   if (!sellerId) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -175,12 +175,11 @@ const getSellerProfile = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("getSellerProfile:", err.message);
-    return res.status(500).json({ error: "Failed to load seller profile" });
+    return next(err);
   }
 };
 
-const getSellerDashboard = async (req, res) => {
+const getSellerDashboard = async (req, res, next) => {
   const sellerId = req.user?.seller_id;
   if (!sellerId) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -286,12 +285,11 @@ const getSellerDashboard = async (req, res) => {
       })),
     });
   } catch (err) {
-    console.error("getSellerDashboard:", err.message);
-    return res.status(500).json({ error: "Failed to load seller dashboard" });
+    return next(err);
   }
 };
 
-const getSellerAnalytics = async (req, res) => {
+const getSellerAnalytics = async (req, res, next) => {
   const sellerId = req.user?.seller_id;
   if (!sellerId) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -390,8 +388,7 @@ const getSellerAnalytics = async (req, res) => {
       })),
     });
   } catch (err) {
-    console.error("getSellerAnalytics:", err.message);
-    return res.status(500).json({ error: "Failed to load seller analytics" });
+    return next(err);
   }
 };
 

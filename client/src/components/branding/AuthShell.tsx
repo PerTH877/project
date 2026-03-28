@@ -32,6 +32,7 @@ export function AuthShell({
         <div className="absolute right-[6%] top-[16%] h-72 w-72 rounded-full bg-violet-500/10 blur-3xl" />
         <div className="absolute bottom-[-6%] left-[22%] h-80 w-80 rounded-full bg-pink-500/8 blur-3xl" />
       </div>
+      
 
       <div className="shell-width relative py-6 sm:py-8">
         <div className="mb-8 flex items-center justify-between gap-4">

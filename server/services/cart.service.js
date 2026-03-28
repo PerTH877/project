@@ -2,9 +2,38 @@ const cartRepository = require("../repositories/cart.repository");
 
 async function getCartItems(pool, userId) {
   const cartItems = await cartRepository.getCartItems(pool, userId);
+  
+  const transformedItems = cartItems.map(row => {
+    const unitPrice = Number(row.base_price) + Number(row.price_adjustment || 0);
+    const lineTotal = unitPrice * row.quantity;
+    
+    return {
+      cart_id: row.cart_id,
+      quantity: row.quantity,
+      is_saved: row.is_saved,
+      added_at: row.added_at,
+      unit_price: unitPrice,
+      line_total: lineTotal,
+      product: {
+        product_id: row.product_id,
+        title: row.title,
+        base_price: row.base_price,
+        seller_name: row.seller_name,
+        primary_image: row.primary_image,
+        available_stock: row.available_stock,
+      },
+      variant: {
+        variant_id: row.variant_id,
+        sku: row.sku,
+        price_adjustment: row.price_adjustment,
+        attributes: row.attributes,
+      }
+    };
+  });
+
   return {
-    items: cartItems,
-    count: cartItems.length,
+    items: transformedItems,
+    count: transformedItems.length,
   };
 }
 

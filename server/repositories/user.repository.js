@@ -58,15 +58,31 @@ const findById = async (userId) => {
  * Update allowed profile fields for a user.
  */
 const updateProfile = async (userId, { full_name, phone_number, nearby_warehouse_id }) => {
+  const setClauses = [];
+  const params = [];
+
+  if (full_name !== undefined) {
+    params.push(full_name);
+    setClauses.push(`full_name = $${params.length}`);
+  }
+  if (phone_number !== undefined) {
+    params.push(phone_number ?? null);
+    setClauses.push(`phone_number = $${params.length}`);
+  }
+  if (nearby_warehouse_id !== undefined) {
+    params.push(nearby_warehouse_id ?? null);
+    setClauses.push(`nearby_warehouse_id = $${params.length}`);
+  }
+
+  if (setClauses.length === 0) return null;
+
+  params.push(userId);
   const result = await pool.query(
     `UPDATE users
-     SET
-       full_name           = COALESCE($1, full_name),
-       phone_number        = COALESCE($2, phone_number),
-       nearby_warehouse_id = COALESCE($3, nearby_warehouse_id)
-     WHERE user_id = $4
+     SET ${setClauses.join(", ")}
+     WHERE user_id = $${params.length}
      RETURNING user_id, full_name, email, phone_number, nearby_warehouse_id`,
-    [full_name ?? null, phone_number ?? null, nearby_warehouse_id ?? null, userId]
+    params
   );
   return result.rows[0] || null;
 };

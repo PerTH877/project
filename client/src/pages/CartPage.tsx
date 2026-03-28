@@ -8,14 +8,17 @@ import { SmartImage } from "@/components/media/SmartImage";
 import { Panel, PageHeader, PageShell, StatCard } from "@/components/ui/Surface";
 import { formatCurrencyBDT, formatNumber } from "@/lib/utils";
 import { cartService } from "@/services/cart";
+import { useAuthStore } from "@/store/authStore";
 
 export default function CartPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { token, role } = useAuthStore();
 
   const cartQuery = useQuery({
     queryKey: ["cart"],
     queryFn: cartService.getItems,
+    enabled: !!token && role === "user",
   });
 
   const updateMutation = useMutation({
@@ -165,7 +168,7 @@ export default function CartPage() {
                             }
                             className="rounded-full border border-white/10 bg-[#071019] px-4 py-2 text-sm text-white outline-none transition focus:border-cyan-300"
                           >
-                            {Array.from({ length: Math.min(10, Math.max(item.availability.available_stock, item.quantity, 1)) }).map((_, index) => {
+                            {Array.from({ length: Math.min(10, Math.max(item.product?.available_stock ?? 0, item.quantity, 1)) }).map((_, index) => {
                               const value = index + 1;
                               return (
                                 <option key={value} value={value}>
@@ -174,10 +177,12 @@ export default function CartPage() {
                               );
                             })}
                           </select>
-                          <span className={item.availability.in_stock ? "text-xs text-emerald-300" : "text-xs text-rose-300"}>
-                            {item.availability.in_stock
-                              ? `${formatNumber(item.availability.available_stock)} available`
-                              : `Only ${formatNumber(item.availability.available_stock)} available`}
+                          <span className={(item.product?.available_stock ?? 0) > 0 ? "text-xs text-emerald-300" : "text-xs text-rose-300"}>
+                            {item.product?.available_stock !== undefined
+                              ? ((item.product.available_stock ?? 0) > 0
+                                ? `${formatNumber(item.product.available_stock)} available`
+                                : `Stock unavailable`)
+                              : `Checking stock...`}
                           </span>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">

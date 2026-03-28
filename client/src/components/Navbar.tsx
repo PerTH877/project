@@ -26,11 +26,13 @@ export function Navbar() {
     enabled: deferredSearch.trim().length > 1,
   });
 
-  const cartTotalQuery = useQuery({
-    queryKey: ["cart-total"],
-    queryFn: cartService.getTotal,
+  const cartQuery = useQuery({
+    queryKey: ["cart"],
+    queryFn: cartService.getItems,
     enabled: !!token && role === "user",
   });
+
+  const cartTotal = cartQuery.data?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
@@ -158,7 +160,7 @@ export function Navbar() {
             <div className="relative">
               <ShoppingCart className="w-8 h-8 text-cyan-400" strokeWidth={1.5} />
               <span className="absolute -top-1 left-3 text-cyan-400 font-bold text-sm h-5 w-5 flex items-center justify-center bg-background rounded-full">
-                {cartTotalQuery.data ? cartTotalQuery.data : 0}
+                {cartTotal}
               </span>
             </div>
             <span className="text-sm font-bold text-white mb-1.5 hidden sm:inline ml-1">Cart</span>

@@ -223,10 +223,6 @@ export interface CartItem {
   is_saved: boolean;
   unit_price: number;
   line_total: number;
-  availability: {
-    in_stock: boolean;
-    available_stock: number;
-  };
   variant: {
     variant_id: number;
     sku: string;
@@ -242,6 +238,7 @@ export interface CartItem {
     brand?: string | null;
     base_price: number;
     primary_image?: string | null;
+    available_stock?: number;
   };
 }
 
