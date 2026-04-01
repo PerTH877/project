@@ -44,6 +44,7 @@ async function getVariantWithStock(client, variantId) {
     `SELECT inventory_id FROM inventory WHERE variant_id = $1 FOR UPDATE`,
     [variantId]
   );
+
   const result = await client.query(
     `SELECT pv.variant_id, p.product_id, p.is_active, pv.is_active AS variant_is_active,
             COALESCE(SUM(i.stock_quantity), 0)::int AS available_stock
