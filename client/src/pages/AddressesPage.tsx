@@ -9,7 +9,7 @@ import { EmptyState, ErrorState } from "@/components/EmptyState";
 import { Skeleton } from "@/components/Skeleton";
 import { Panel, PageHeader, PageShell, StatCard } from "@/components/ui/Surface";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { addressesService } from "@/services/cart";
+import { addressesService } from "@/services/addresses";
 import type { Address } from "@/types";
 
 const addressSchema = z.object({

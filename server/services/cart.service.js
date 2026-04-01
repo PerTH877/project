@@ -26,7 +26,7 @@ async function getCartItems(pool, userId) {
         variant_id: row.variant_id,
         sku: row.sku,
         price_adjustment: row.price_adjustment,
-        attributes: row.attributes,
+        attributes: row.attributes || {},
       }
     };
   });

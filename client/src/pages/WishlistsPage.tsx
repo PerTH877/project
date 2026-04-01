@@ -8,6 +8,8 @@ import { Panel, PageHeader, PageShell, StatCard } from "@/components/ui/Surface"
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { wishlistsService } from "@/services/wishlists";
 import { formatCurrencyBDT } from "@/lib/utils";
+import { ProductCard } from "@/components/ProductCard";
+import type { ProductCard as ProductCardType } from "@/types";
 
 export default function WishlistsPage() {
   const queryClient = useQueryClient();
@@ -86,7 +88,7 @@ export default function WishlistsPage() {
         return (
           !needle ||
           item.product.title.toLowerCase().includes(needle) ||
-          item.sku.toLowerCase().includes(needle)
+          (item.sku || "").toLowerCase().includes(needle)
         );
       }),
     }))
@@ -158,45 +160,29 @@ export default function WishlistsPage() {
                   No saved products match the current search in this list.
                 </div>
               ) : (
-                <div className="grid gap-4 lg:grid-cols-2">
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {wishlist.items.map((item) => (
-                    <div key={item.item_id} className="flex gap-4 rounded-[24px] border border-white/8 bg-white/[0.03] p-4">
-                      <div className="h-24 w-24 overflow-hidden rounded-[18px] border border-white/8 bg-white/[0.03]">
-                        {item.product.primary_image ? (
-                          <img
-                            src={item.product.primary_image}
-                            alt={item.product.title}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : null}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div>
-                            <p className="font-semibold text-white">{item.product.title}</p>
-                            <p className="mt-1 text-sm text-muted-foreground">{item.sku}</p>
-                          </div>
-                          <p className="text-sm font-semibold text-primary">{formatCurrencyBDT(item.price)}</p>
-                        </div>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {Object.entries(item.attributes).map(([key, value]) => (
-                            <StatusBadge key={key} label={`${key}: ${value}`} tone="slate" />
-                          ))}
-                        </div>
-                        <button
-                          onClick={() =>
-                            removeMutation.mutate({
-                              wishlistId: wishlist.wishlist_id,
-                              variantId: item.variant_id,
-                            })
-                          }
-                          className="action-secondary mt-4 border-rose-400/20 text-rose-200 hover:border-rose-400/40"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Remove
-                        </button>
-                      </div>
-                    </div>
+                    <ProductCard
+                      key={item.item_id}
+                      variantId={item.variant_id}
+                      product={{
+                        product_id: item.product.product_id,
+                        seller_id: 0,
+                        seller_name: "Marketplace",
+                        seller_verified: false,
+                        title: item.product.title,
+                        brand: item.product.brand,
+                        base_price: item.product.base_price,
+                        lowest_price: item.price,
+                        highest_price: item.price,
+                        created_at: item.added_at,
+                        is_active: true,
+                        primary_image: item.product.primary_image,
+                        avg_rating: 0,
+                        review_count: 0,
+                        total_stock: 1,
+                      } as ProductCardType}
+                    />
                   ))}
                 </div>
               )}

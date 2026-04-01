@@ -32,7 +32,7 @@ export function Navbar() {
     enabled: !!token && role === "user",
   });
 
-  const cartTotal = cartQuery.data?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+  const cartTotal = cartQuery.data?.items?.filter((item: any) => !item.is_saved).reduce((sum: number, item: any) => sum + item.quantity, 0) || 0;
 
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
@@ -150,6 +150,11 @@ export function Navbar() {
               </div>
             </div>
           )}
+
+          <Link to="/wishlists" className="hidden md:flex px-3 py-2 hover:outline hover:outline-1 hover:outline-cyan-400 rounded-sm flex-col items-center justify-center transition-all">
+             <span className="text-[11px] text-slate-300 leading-tight">Your</span>
+             <span className="text-sm font-bold text-white leading-tight">Wishlist</span>
+          </Link>
 
           <Link to="/orders" className="hidden lg:flex px-3 py-2 hover:outline hover:outline-1 hover:outline-cyan-400 rounded-sm flex-col items-start justify-center transition-all">
              <span className="text-[11px] text-slate-300 leading-tight">Returns</span>

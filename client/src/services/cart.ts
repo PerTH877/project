@@ -1,5 +1,5 @@
 import api from "@/lib/api";
-import type { Address, AddressInput, CartResponse, CheckoutReviewSummary } from "@/types";
+import type { CartResponse, CheckoutReviewSummary } from "@/types";
 
 export const cartService = {
   getItems: async (): Promise<CartResponse> => {
@@ -43,34 +43,12 @@ export const checkoutService = {
     const res = await api.post("/checkout/payment", { payment_method });
     return res.data;
   },
-  review: async () => {
-    const res = await api.get("/checkout/review");
+  review: async (address_id: number, payment_method: string) => {
+    const res = await api.get("/checkout/review", { params: { address_id, payment_method } });
     return res.data.summary as CheckoutReviewSummary;
   },
   execute: async (address_id: number, payment_method: string) => {
     const res = await api.post("/checkout/execute", { address_id, payment_method });
     return res.data;
   }
-};
-
-export const addressesService = {
-  list: async (): Promise<Address[]> => {
-    const res = await api.get("/addresses");
-    return res.data.addresses;
-  },
-
-  create: async (payload: AddressInput) => {
-    const res = await api.post("/addresses", payload);
-    return res.data.address;
-  },
-
-  update: async (address_id: number, payload: Partial<AddressInput>) => {
-    const res = await api.put(`/addresses/${address_id}`, payload);
-    return res.data.address;
-  },
-
-  delete: async (address_id: number) => {
-    const res = await api.delete(`/addresses/${address_id}`);
-    return res.data;
-  },
 };

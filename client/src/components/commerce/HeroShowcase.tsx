@@ -134,13 +134,18 @@ export function HeroShowcase({ featuredProducts = [] }: HeroShowcaseProps) {
             )}
           >
             <div className="absolute inset-0">
-              <SmartImage
-                src={product.primary_image}
-                alt={product.title}
-                className="h-full w-full"
-                aspectRatio=""
-                priority={index === activeIndex || index === (activeIndex + 1) % allProducts.length}
-              />
+              {index === activeIndex || index === (activeIndex + 1) % allProducts.length || index === (activeIndex - 1 + allProducts.length) % allProducts.length ? (
+                <SmartImage
+                  src={product.primary_image}
+                  alt={product.title}
+                  className="h-full w-full"
+                  aspectRatio=""
+                  decoding="async"
+                  priority={index === activeIndex || index === (activeIndex + 1) % allProducts.length}
+                />
+              ) : (
+                <div className="h-full w-full" />
+              )}
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,8,14,0.25)_0%,rgba(5,8,14,0.85)_65%,rgba(5,8,14,0.97)_100%)]" />
               <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,255,255,0.04),transparent_40%,transparent_60%,rgba(255,88,214,0.04))]" />
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/90 to-transparent" style={{ boxShadow: '0 0 8px rgba(0,255,255,0.5)' }} />

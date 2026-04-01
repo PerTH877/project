@@ -24,6 +24,7 @@ const parseNumber = (value, fallback = null) => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+
 const parsePagination = (query = {}) => {
   const page = Math.max(DEFAULT_PAGE, parseId(query.page) ?? DEFAULT_PAGE);
   const pageSize = Math.min(
@@ -56,6 +57,7 @@ const mapProductRow = (row) => ({
   review_count: Number(row.review_count ?? 0),
   total_stock: Number(row.total_stock ?? 0),
 });
+
 
 const buildProductFilters = ({
   search,

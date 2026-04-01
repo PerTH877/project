@@ -144,6 +144,13 @@ async function executeCheckout(pool, userId, addressId, paymentMethod = "Cash on
       estimatedArrival.toISOString().split("T")[0]
     );
 
+    // Instant Demo: Auto-complete the order bypassing manual payment gateway steps
+    await client.query(`UPDATE orders SET status = 'Delivered' WHERE order_id = $1`, [order.order_id]);
+    await client.query(`UPDATE payments SET status = 'Success' WHERE order_id = $1`, [order.order_id]);
+    await client.query(`UPDATE shipments SET status = 'Delivered' WHERE order_id = $1`, [order.order_id]);
+    
+    order.status = 'Delivered';
+
     await client.query("COMMIT");
 
     return {

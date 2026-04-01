@@ -145,7 +145,8 @@ CREATE TABLE Cart (
     user_id INTEGER REFERENCES Users(user_id) ON DELETE CASCADE,
     variant_id INTEGER REFERENCES Product_Variants(variant_id) ON DELETE CASCADE,
     quantity INTEGER NOT NULL CHECK (quantity > 0),
-    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_saved BOOLEAN DEFAULT FALSE
 );
 
 
@@ -296,18 +297,18 @@ CREATE TABLE IF NOT EXISTS order_audit (
     audit_id SERIAL PRIMARY KEY,
     order_id INTEGER,
     action VARCHAR(50),
-    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 
 CREATE OR REPLACE FUNCTION log_order_changes() RETURNS TRIGGER AS $$
 BEGIN
     IF TG_OP = 'INSERT' THEN
-        INSERT INTO order_audit (order_id, action) VALUES (NEW.order_id, 'INSERT');
+        INSERT INTO order_audit (order_id, action, created_at) VALUES (NEW.order_id, 'INSERT', NOW());
     ELSIF TG_OP = 'UPDATE' THEN
-        INSERT INTO order_audit (order_id, action) VALUES (NEW.order_id, 'UPDATE');
+        INSERT INTO order_audit (order_id, action, created_at) VALUES (NEW.order_id, 'UPDATE', NOW());
     ELSIF TG_OP = 'DELETE' THEN
-        INSERT INTO order_audit (order_id, action) VALUES (OLD.order_id, 'DELETE');
+        INSERT INTO order_audit (order_id, action, created_at) VALUES (OLD.order_id, 'DELETE', NOW());
     END IF;
     RETURN NEW;
 END;

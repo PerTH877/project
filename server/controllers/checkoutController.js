@@ -39,11 +39,13 @@ const setCheckoutPayment = async (req, res, next) => {
 
 const reviewCheckoutSummary = async (req, res, next) => {
   const userId = req.user?.user_id;
+  const addressId = req.query.address_id ? parseId(req.query.address_id) : null;
+  const paymentMethod = req.query.payment_method;
 
   if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
   try {
-    const summary = await checkoutService.reviewCheckoutSummary(pool, userId);
+    const summary = await checkoutService.reviewCheckoutSummary(pool, userId, addressId, paymentMethod);
     return res.json({ summary });
   } catch (err) {
     return next(err);

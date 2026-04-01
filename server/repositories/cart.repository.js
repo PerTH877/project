@@ -28,7 +28,7 @@ async function getCartItems(pool, userId) {
      ) media ON TRUE
      LEFT JOIN inventory i ON i.variant_id = pv.variant_id
      WHERE c.user_id = $1
-     GROUP BY c.cart_id, pv.variant_id, p.product_id, s.company_name, media.media_url`,
+     GROUP BY c.cart_id, c.variant_id, c.quantity, c.is_saved, c.added_at, pv.sku, pv.price_adjustment, pv.attributes, p.product_id, p.title, p.base_price, s.company_name, media.media_url`,
     [userId]
   );
   return result.rows;
@@ -40,15 +40,11 @@ async function getCartTotal(client, userId) {
 }
 
 async function getVariantWithStock(client, variantId) {
-  
-  
-  
   await client.query(
     `SELECT inventory_id FROM inventory WHERE variant_id = $1 FOR UPDATE`,
     [variantId]
   );
 
-  
   const result = await client.query(
     `SELECT pv.variant_id, p.product_id, p.is_active, pv.is_active AS variant_is_active,
             COALESCE(SUM(i.stock_quantity), 0)::int AS available_stock

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, BookmarkPlus, MoveLeft, ShieldCheck, ShoppingCart, Trash2 } from "lucide-react";
@@ -14,6 +15,12 @@ export default function CartPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { token, role } = useAuthStore();
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/login");
+    }
+  }, [token, navigate]);
 
   const cartQuery = useQuery({
     queryKey: ["cart"],
@@ -147,7 +154,7 @@ export default function CartPage() {
                             Sold by <span className="text-white">{item.product.seller_name}</span>
                           </p>
                           <p className="mt-2 text-xs uppercase tracking-[0.24em] text-cyan-300/80">
-                            {Object.entries(item.variant.attributes).map(([key, value]) => `${key}: ${value}`).join(" • ") || item.variant.sku}
+                            {Object.entries(item.variant.attributes || {}).map(([key, value]) => `${key}: ${value}`).join(" • ") || item.variant.sku}
                           </p>
                         </div>
                         <div className="text-left md:text-right">

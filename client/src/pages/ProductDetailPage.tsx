@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Activity, ArrowRight, ShieldCheck, Star, Terminal, Truck } from "lucide-react";
+import { Activity, ArrowRight, Heart, ShieldCheck, Star, Terminal, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { ProductCard } from "@/components/ProductCard";
 import { SmartImage } from "@/components/media/SmartImage";
+import { RecentlyViewed } from "@/components/commerce/RecentlyViewed";
 import { productsService } from "@/services/products";
 import { cartService } from "@/services/cart";
+import { wishlistsService } from "@/services/wishlists";
 import { useAuthStore } from "@/store/authStore";
+import { useHistoryStore } from "@/store/historyStore";
 import { formatCurrencyBDT } from "@/lib/utils";
 
 export default function ProductDetailPage() {
@@ -15,6 +18,7 @@ export default function ProductDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { token } = useAuthStore();
+  const { pushProduct } = useHistoryStore();
   const [selectedImage, setSelectedImage] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
@@ -25,6 +29,20 @@ export default function ProductDetailPage() {
     enabled: !!id,
   });
 
+  // Push to browsing history when the product loads
+  useEffect(() => {
+    if (productQuery.data?.product?.product_id) {
+      pushProduct(productQuery.data.product.product_id);
+    }
+  }, [productQuery.data?.product?.product_id, pushProduct]);
+
+  // Fetch wishlists to determine if the current variant is already saved
+  const wishlistsQuery = useQuery({
+    queryKey: ["wishlists"],
+    queryFn: wishlistsService.list,
+    enabled: !!token,
+  });
+
   const addToCartMutation = useMutation({
     mutationFn: (variantId: number) => cartService.addItem(variantId, quantity),
     onSuccess: () => {
@@ -33,6 +51,34 @@ export default function ProductDetailPage() {
       toast.success("Item added to cart.");
     },
     onError: () => toast.error("System rejected cart addition."),
+  });
+
+  // Wishlist heart-toggle: auto-use first wishlist, or create one if none exist
+  const wishlistToggleMutation = useMutation({
+    mutationFn: async (variantId: number) => {
+      const wishlists = wishlistsQuery.data ?? [];
+      let targetList = wishlists[0];
+
+      if (!targetList) {
+        // Auto-create a default wishlist
+        targetList = await wishlistsService.create("My Wishlist");
+      }
+
+      const alreadySaved = targetList.items?.some(
+        (item) => item.variant_id === variantId
+      );
+
+      if (alreadySaved) {
+        return wishlistsService.removeItem(targetList.wishlist_id, variantId);
+      } else {
+        return wishlistsService.addItem(targetList.wishlist_id, variantId);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["wishlists"] });
+      toast.success("Wishlist updated.");
+    },
+    onError: () => toast.error("Could not update wishlist."),
   });
 
   if (productQuery.isLoading) {
@@ -64,12 +110,18 @@ export default function ProductDetailPage() {
 
   const selectedVariant =
     variants.find((variant) =>
-      Object.entries(selectedVariants).every(([key, value]) => variant.attributes[key] === value)
+      Object.entries(selectedVariants ?? {}).every(([key, value]) => (variant.attributes || {})[key] === value)
     ) ?? variants[0];
 
   const attributesRequired = Object.keys(attributeGroups).length;
-  const selectedVariantReady = attributesRequired === 0 || Object.keys(selectedVariants).length === attributesRequired;
+  const selectedVariantReady = attributesRequired === 0 || Object.keys(selectedVariants ?? {}).length === attributesRequired;
   const displayPrice = product.base_price + Number(selectedVariant?.price_adjustment ?? 0);
+
+  // Derive wishlist state for the current variant
+  const allWishlistItems = (wishlistsQuery.data ?? []).flatMap((wl) => wl.items ?? []);
+  const isInWishlist = selectedVariant
+    ? allWishlistItems.some((item) => item.variant_id === selectedVariant.variant_id)
+    : false;
 
   return (
     <main className="shell-width py-8 min-h-screen">
@@ -224,9 +276,25 @@ export default function ProductDetailPage() {
               >
                 <span className="truncate">Add to cart</span> <ArrowRight className="w-4 h-4" />
               </button>
-              <button onClick={() => navigate("/cart")} className="cyber-button-secondary w-full">
-                Review cart
-              </button>
+              <div className="flex gap-2">
+                <button onClick={() => navigate("/cart")} className="cyber-button-secondary flex-1">
+                  Review cart
+                </button>
+                {token && selectedVariant && (
+                  <button
+                    onClick={() => wishlistToggleMutation.mutate(selectedVariant.variant_id)}
+                    disabled={wishlistToggleMutation.isPending}
+                    title={isInWishlist ? "Remove from wishlist" : "Save to wishlist"}
+                    className={`flex items-center justify-center w-11 h-11 rounded-lg border transition-all shrink-0 ${
+                      isInWishlist
+                        ? "bg-rose-500/20 border-rose-400/50 text-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.25)]"
+                        : "bg-white/[0.04] border-white/15 text-slate-400 hover:border-rose-400/40 hover:text-rose-400"
+                    }`}
+                  >
+                    <Heart className={`w-5 h-5 transition-all ${isInWishlist ? "fill-current" : ""}`} />
+                  </button>
+                )}
+              </div>
             </div>
 
             {!token ? <p className="text-xs text-magenta-400 font-mono mt-2 mb-4 text-center">Authentication required for purchase.</p> : null}
@@ -255,6 +323,8 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
+
+      <RecentlyViewed excludeId={product.product_id} />
 
       {related_products.length > 0 ? (
         <section className="mt-12">

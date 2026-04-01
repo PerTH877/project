@@ -93,12 +93,12 @@ export function SmartImage({
     let src = initialSrc ? String(initialSrc) : undefined;
     
     // Auto-optimize Unsplash images for significantly faster load times
-    if (src && src.includes('unsplash.com') && !priority) {
+    if (src && src.includes('unsplash.com')) {
       if (src.includes('w=1200')) {
-        src = src.replace('w=1200', 'w=600');
+        src = src.replace('w=1200', 'w=800');
       }
       if (src.includes('q=80')) {
-        src = src.replace('q=80', 'q=60');
+        src = src.replace('q=80', 'q=70');
       }
     }
     

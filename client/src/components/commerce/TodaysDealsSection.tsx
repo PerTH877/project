@@ -26,7 +26,7 @@ export function TodaysDealsSection() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState<Record<number, string>>({});
 
-  const { data: activeDeals = [], isLoading } = useQuery({ 
+  const { data: activeDeals, isLoading } = useQuery({ 
     queryKey: ['flash-deals'], 
     queryFn: getDeals 
   });

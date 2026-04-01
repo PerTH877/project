@@ -3,11 +3,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle2, ChevronRight, CreditCard, Lock, MapPin, Package, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
-import { cartService, checkoutService, addressesService } from "@/services/cart";
+import { cartService, checkoutService } from "@/services/cart";
+import { addressesService } from "@/services/addresses";
 import { EmptyState, ErrorState } from "@/components/EmptyState";
 import { Skeleton } from "@/components/Skeleton";
 import { Panel, PageHeader, PageShell } from "@/components/ui/Surface";
 import { formatCurrencyBDT, formatDate } from "@/lib/utils";
+import { useAuthStore } from "@/store/authStore";
 
 type CheckoutStep = "ADDRESS" | "PAYMENT" | "REVIEW";
 type PaymentMethod = "Cash on Delivery" | "Credit Card" | "bKash";
@@ -40,6 +42,13 @@ export default function CheckoutPage() {
   const [step, setStep] = useState<CheckoutStep>("ADDRESS");
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>("Cash on Delivery");
+  const { token } = useAuthStore();
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/login");
+    }
+  }, [token, navigate]);
 
   const addressesQuery = useQuery({
     queryKey: ["addresses"],
@@ -81,7 +90,7 @@ export default function CheckoutPage() {
 
   const reviewQuery = useQuery({
     queryKey: ["checkout-review", selectedAddressId, selectedPaymentMethod],
-    queryFn: checkoutService.review,
+    queryFn: () => checkoutService.review(selectedAddressId!, selectedPaymentMethod),
     enabled: step === "REVIEW" && !!selectedAddressId,
   });
 
@@ -347,7 +356,7 @@ export default function CheckoutPage() {
                           <div className="flex-1">
                             <p className="font-semibold text-white">{item.product.title}</p>
                             <p className="mt-1 text-sm text-muted-foreground">
-                              {Object.entries(item.variant.attributes).map(([key, value]) => `${key}: ${value}`).join(" • ") || item.variant.sku}
+                              {Object.entries(item.variant.attributes || {}).map(([key, value]) => `${key}: ${value}`).join(" • ") || item.variant.sku}
                             </p>
                             <p className="mt-1 text-xs uppercase tracking-[0.22em] text-cyan-300/80">
                               Added {formatDate(item.added_at)}
@@ -432,16 +441,6 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {step === "REVIEW" ? (
-            <button
-              onClick={() => executeCheckoutMutation.mutate()}
-              disabled={executeCheckoutMutation.isPending}
-              className="action-primary mt-6 w-full justify-center disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Confirm purchase
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          ) : null}
         </Panel>
       </div>
     </PageShell>
