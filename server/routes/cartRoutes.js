@@ -9,13 +9,13 @@ const {
   toggleSaveForLater,
 } = require('../controllers/cartController');
 
-// Define the '/total' route before the parameterised route so that it
-// doesn't get captured by the :cart_id pattern.  This endpoint returns
-// the computed cart total for the authenticated user.
+
+
+
 router.get('/total', authMiddleware, requireRole('user'), getCartTotal);
 
 
-// Standard cart CRUD endpoints
+
 router.get('/', authMiddleware, requireRole('user'), getCartItems);
 router.post('/', authMiddleware, requireRole('user'), addToCart);
 router.put('/:cart_id', authMiddleware, requireRole('user'), updateCartItem);

@@ -4,7 +4,7 @@ const pool = require("../config/db");
 const { parseId } = require("../utils/marketplace");
 const checkoutService = require("../services/checkout.service");
 
-// ─── Step 1: Set Address ──────────────────────────────────────────────────────
+
 const setCheckoutAddress = async (req, res, next) => {
   const userId = req.user?.user_id;
   const addressId = parseId(req.body.address_id);
@@ -20,7 +20,7 @@ const setCheckoutAddress = async (req, res, next) => {
   }
 };
 
-// ─── Step 2: Set Payment Method ───────────────────────────────────────────────
+
 const setCheckoutPayment = async (req, res, next) => {
   const userId = req.user?.user_id;
   const paymentMethod = req.body.payment_method;
@@ -36,7 +36,7 @@ const setCheckoutPayment = async (req, res, next) => {
   }
 };
 
-// ─── Step 3: Review Summary ───────────────────────────────────────────────────
+
 const reviewCheckoutSummary = async (req, res, next) => {
   const userId = req.user?.user_id;
 
@@ -50,7 +50,7 @@ const reviewCheckoutSummary = async (req, res, next) => {
   }
 };
 
-// ─── Step 4: Execute Checkout ─────────────────────────────────────────────────
+
 const executeCheckout = async (req, res, next) => {
   const userId = req.user?.user_id;
   const addressId = parseId(req.body.address_id);

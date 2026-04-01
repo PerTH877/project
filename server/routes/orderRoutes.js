@@ -9,11 +9,11 @@ const {
   updateOrderStatus,
 } = require("../controllers/order.controller");
 
-// User routes
+
 router.get("/", authMiddleware, requireRole("user"), getUserOrders);
 router.get("/:order_id", authMiddleware, requireRole("user"), getUserOrderDetail);
 
-// Seller routes
+
 router.get(
   "/seller/list",
   authMiddleware,

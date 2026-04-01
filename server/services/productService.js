@@ -432,7 +432,7 @@ const updateProductWithVariants = async (pool, productId, sellerId, body) => {
 
   let variants;
   if (body.variants !== undefined) {
-    variants = normalizeVariantPayload(body.variants); // throws on invalid
+    variants = normalizeVariantPayload(body.variants); 
   }
 
   const media = body.media !== undefined ? normalizeMedia(body.media) : undefined;
@@ -484,7 +484,7 @@ const deactivateProduct = async (pool, productId, sellerId) => {
     await client.query("BEGIN");
     const row = await repo.deactivateProductRow(client, productId, sellerId);
     await client.query("COMMIT");
-    return row; // null → 404 in controller
+    return row; 
   } catch (err) {
     await client.query("ROLLBACK");
     throw err;
@@ -535,7 +535,7 @@ const updateVariant = async (pool, variantId, sellerId, body) => {
     await client.query("BEGIN");
     const row = await repo.updateVariantRow(client, variantId, sellerId, setClauses, values);
     await client.query("COMMIT");
-    return row; // null → 404 in controller
+    return row; 
   } catch (err) {
     await client.query("ROLLBACK");
     throw err;

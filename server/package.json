@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
+    "migrate": "node run_migration.js",
+    "migrate:reset": "node run_migration.js --reset",
     "seed:demo": "node seeds/demo_seed.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

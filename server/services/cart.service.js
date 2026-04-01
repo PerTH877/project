@@ -38,7 +38,7 @@ async function getCartItems(pool, userId) {
 }
 
 async function getCartTotal(pool, userId) {
-  // For public API endpoints, use pool directly
+  
   let client;
   try {
     client = await pool.connect();

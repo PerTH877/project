@@ -4,7 +4,7 @@ const pool = require("../config/db");
 const { parseId } = require("../utils/marketplace");
 const cartService = require("../services/cart.service");
 
-// ─── GET /cart ────────────────────────────────────────────────────────────────
+
 const getCartItems = async (req, res, next) => {
   const userId = req.user?.user_id;
 
@@ -18,7 +18,7 @@ const getCartItems = async (req, res, next) => {
   }
 };
 
-// ─── GET /cart/total ──────────────────────────────────────────────────────────
+
 const getCartTotal = async (req, res, next) => {
   const userId = req.user?.user_id;
 
@@ -32,7 +32,7 @@ const getCartTotal = async (req, res, next) => {
   }
 };
 
-// ─── POST /cart ───────────────────────────────────────────────────────────────
+
 const addToCart = async (req, res, next) => {
   const userId = req.user?.user_id;
   const variantId = Number(req.body.variant_id);
@@ -56,7 +56,7 @@ const addToCart = async (req, res, next) => {
   }
 };
 
-// ─── PUT /cart/:cart_id ───────────────────────────────────────────────────────
+
 const updateCartItem = async (req, res, next) => {
   const userId = req.user?.user_id;
   const cartId = parseId(req.params.cart_id);
@@ -77,7 +77,7 @@ const updateCartItem = async (req, res, next) => {
   }
 };
 
-// ─── DELETE /cart/:cart_id ────────────────────────────────────────────────────
+
 const removeCartItem = async (req, res, next) => {
   const userId = req.user?.user_id;
   const cartId = parseId(req.params.cart_id);
@@ -93,7 +93,7 @@ const removeCartItem = async (req, res, next) => {
   }
 };
 
-// ─── PATCH /cart/:cart_id/save ────────────────────────────────────────────────
+
 const toggleSaveForLater = async (req, res, next) => {
   const userId = req.user?.user_id;
   const cartId = parseId(req.params.cart_id);
@@ -117,5 +117,5 @@ module.exports = {
   updateCartItem,
   removeCartItem,
   toggleSaveForLater,
-  // NOTE: checkout / executeCheckout has been moved to checkoutController.js
+  
 };

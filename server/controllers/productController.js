@@ -73,7 +73,7 @@ const getProduct = async (req, res) => {
   }
 };
 
-// ─── Seller product management ────────────────────────────────────────────────
+
 
 const createProduct = async (req, res) => {
   const sellerId = req.user?.seller_id;
@@ -159,7 +159,7 @@ const deactivateProduct = async (req, res) => {
   }
 };
 
-// ─── Variant management ───────────────────────────────────────────────────────
+
 
 const updateVariant = async (req, res) => {
   const sellerId = req.user?.seller_id;
@@ -197,7 +197,7 @@ const updateVariantInventory = async (req, res) => {
   }
 };
 
-// ─── Reviews ──────────────────────────────────────────────────────────────────
+
 
 const createReview = async (req, res) => {
   const userId = req.user?.user_id;
@@ -214,7 +214,7 @@ const createReview = async (req, res) => {
   }
 };
 
-// ─── Q&A ──────────────────────────────────────────────────────────────────────
+
 
 const askProductQuestion = async (req, res) => {
   const userId = req.user?.user_id;
@@ -248,7 +248,7 @@ const answerProductQuestion = async (req, res) => {
   }
 };
 
-// ─── Exports ──────────────────────────────────────────────────────────────────
+
 
 module.exports = {
   getHomeFeed,

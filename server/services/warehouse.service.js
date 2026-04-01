@@ -38,12 +38,12 @@ const createWarehouse = async (data) => {
   });
 };
 
-/**
- * Restock: add `quantity` units to an existing inventory row.
- * @param {number} variantId
- * @param {number} warehouseId
- * @param {number} qty  - must be a positive integer
- */
+
+
+
+
+
+
 const restockInventory = async (variantId, warehouseId, qty) => {
   if (!Number.isInteger(qty) || qty <= 0) {
     const err = new Error("quantity must be a positive integer");
