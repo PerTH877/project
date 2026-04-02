@@ -383,9 +383,11 @@ export interface AdminGeographicDemand {
   order_count: number;
   gmv: number;
   active_customers: number;
+  potential_customers?: number;
   delivered_orders: number;
   top_category: string;
   growth_rate: number;
+  atrophy_score?: number;
 }
 
 export interface AdminReturnsRiskRow {

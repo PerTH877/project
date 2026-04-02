@@ -23,7 +23,7 @@ export function PageHeader({
   className,
 }: {
   eyebrow: string;
-  title: string;
+  title: ReactNode | string;
   description?: string;
   actions?: ReactNode;
   meta?: ReactNode;
@@ -41,7 +41,7 @@ export function PageHeader({
           <p className="hud-kicker">{eyebrow}</p>
           <span className="h-px w-16 bg-gradient-to-r from-cyan-300/70 to-transparent" />
         </div>
-        <h1 className="display-font max-w-4xl text-3xl font-semibold leading-tight text-white sm:text-4xl xl:text-5xl">
+        <h1 className="display-font max-w-4xl text-3xl font-bold leading-tight bg-gradient-to-r from-fuchsia-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent drop-shadow-sm sm:text-4xl xl:text-5xl">
           {title}
         </h1>
         {description ? <p className="max-w-3xl text-sm leading-7 text-muted-foreground">{description}</p> : null}
@@ -64,6 +64,7 @@ export function Panel({
   children,
   className,
   contentClassName,
+  titleClassName,
 }: {
   title?: string;
   subtitle?: string;
@@ -72,6 +73,7 @@ export function Panel({
   children: ReactNode;
   className?: string;
   contentClassName?: string;
+  titleClassName?: string;
 }) {
   return (
     <section className={cn("hud-panel hud-blur p-5 sm:p-6", className)}>
@@ -88,7 +90,7 @@ export function Panel({
                 </div>
               ) : null}
               <div>
-                <h2 className="display-font text-xl font-semibold text-white sm:text-2xl">{title}</h2>
+                <h2 className={cn("display-font text-xl font-semibold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent sm:text-2xl", titleClassName)}>{title}</h2>
                 {subtitle ? <p className="text-sm leading-7 text-muted-foreground">{subtitle}</p> : null}
               </div>
             </div>

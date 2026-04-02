@@ -362,7 +362,12 @@ const getWarehousePressureData = async () => {
 
 const getGeographicDemandData = async () => {
   const result = await pool.query(
-    `WITH city_sales AS (
+    `WITH target_cities AS (
+       SELECT DISTINCT city FROM warehouses WHERE is_active = TRUE
+       UNION
+       SELECT DISTINCT city FROM addresses
+     ),
+     city_sales AS (
        SELECT
          a.city,
          COUNT(DISTINCT o.order_id)::int AS order_count,
@@ -390,17 +395,22 @@ const getGeographicDemandData = async () => {
            ),
            0
          )::numeric(12,2) AS previous_period_gmv
-       FROM orders o
-       JOIN addresses a ON a.address_id = o.address_id
+       FROM addresses a
+       LEFT JOIN orders o ON o.address_id = a.address_id
        GROUP BY a.city
+     ),
+     city_users AS (
+       SELECT city, COUNT(DISTINCT user_id)::int AS user_base
+       FROM addresses
+       GROUP BY city
      ),
      city_category AS (
        SELECT
          a.city,
          COALESCE(c.name, 'Uncategorized') AS category_name,
          COALESCE(SUM(oi.quantity * oi.unit_price), 0)::numeric(12,2) AS gmv
-       FROM orders o
-       JOIN addresses a ON a.address_id = o.address_id
+       FROM addresses a
+       JOIN orders o ON o.address_id = a.address_id
        JOIN order_items oi ON oi.order_id = o.order_id
        JOIN product_variants pv ON pv.variant_id = oi.variant_id
        JOIN products p ON p.product_id = pv.product_id
@@ -416,24 +426,31 @@ const getGeographicDemandData = async () => {
        FROM city_category
      )
      SELECT
-       cs.city,
-       cs.order_count,
-       cs.gmv,
-       cs.active_customers,
-       cs.delivered_orders,
-       COALESCE(rc.category_name, 'Uncategorized') AS top_category,
+       tc.city,
+       COALESCE(cs.order_count, 0)::int AS order_count,
+       COALESCE(cs.gmv, 0)::numeric(12,2) AS gmv,
+       COALESCE(cs.active_customers, 0)::int AS active_customers,
+       COALESCE(cu.user_base, 0)::int AS potential_customers,
+       COALESCE(cs.delivered_orders, 0)::int AS delivered_orders,
+       COALESCE(rc.category_name, 'Market Opportunity') AS top_category,
        CASE
          WHEN COALESCE(cs.previous_period_gmv, 0) > 0
-         THEN ROUND(((cs.current_period_gmv - cs.previous_period_gmv) / cs.previous_period_gmv) * 100, 2)
+         THEN ROUND(((COALESCE(cs.current_period_gmv, 0) - cs.previous_period_gmv) / cs.previous_period_gmv) * 100, 2)
          WHEN COALESCE(cs.current_period_gmv, 0) > 0
          THEN 100
          ELSE 0
-       END AS growth_rate
-     FROM city_sales cs
+       END AS growth_rate,
+       ROUND(
+         (COALESCE(cu.user_base, 0)::numeric / (COALESCE(cs.gmv, 0) + 1)),
+         4
+       ) AS atrophy_score
+     FROM target_cities tc
+     LEFT JOIN city_sales cs ON cs.city = tc.city
+     LEFT JOIN city_users cu ON cu.city = tc.city
      LEFT JOIN ranked_category rc
-       ON rc.city = cs.city
+       ON rc.city = tc.city
       AND rc.rank_in_city = 1
-     ORDER BY cs.gmv DESC, cs.order_count DESC, cs.city ASC`
+     ORDER BY cs.gmv DESC, tc.city ASC`
   );
   return result.rows;
 };
