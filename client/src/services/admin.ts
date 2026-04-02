@@ -67,8 +67,8 @@ export const adminService = {
     return res.data.sellers;
   },
 
-  verifySeller: async (seller_id: number) => {
-    const res = await api.patch(`/admin/sellers/${seller_id}/verify`);
+  verifySeller: async (id: number) => {
+    const res = await api.put(`/admin/sellers/${id}/verify`);
     return res.data;
   },
 

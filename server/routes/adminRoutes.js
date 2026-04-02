@@ -25,8 +25,8 @@ router.get("/me", authMiddleware, requireRole("admin"), getCurrentAdmin);
 
 router.get("/overview", authMiddleware, requireRole("admin"), getAdminOverview);
 router.get("/sellers/pending", authMiddleware, requireRole("admin"), listPendingSellers);
-router.patch(
-  "/sellers/:seller_id/verify",
+router.put(
+  "/sellers/:id/verify",
   authMiddleware,
   requireRole("admin"),
   verifySeller

@@ -58,7 +58,7 @@ const listPendingSellers = async (req, res) => {
 
 const verifySeller = async (req, res) => {
   try {
-    const sellerId = Number(req.params.seller_id);
+    const sellerId = Number(req.params.id);
     if (!Number.isInteger(sellerId) || sellerId <= 0) {
       return res
         .status(400)

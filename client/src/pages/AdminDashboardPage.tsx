@@ -60,6 +60,22 @@ export default function AdminDashboardPage() {
     queryKey: ["admin-order-fulfillment"],
     queryFn: adminService.getOrderFulfillment,
   });
+  const pendingSellersQuery = useQuery({
+    queryKey: ["admin-pending-sellers"],
+    queryFn: adminService.getPendingSellers,
+  });
+
+  const verifySellerMutation = useMutation({
+    mutationFn: (id: number) => adminService.verifySeller(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-pending-sellers"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-overview"] });
+      toast.success("Seller verified successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || "Verification failed");
+    },
+  });
 
   const createCategoryMutation = useMutation({
     mutationFn: () =>
@@ -108,7 +124,8 @@ export default function AdminDashboardPage() {
     overviewQuery.isLoading ||
     sellerPerformanceQuery.isLoading ||
     categoryPerformanceQuery.isLoading ||
-    orderFulfillmentQuery.isLoading;
+    orderFulfillmentQuery.isLoading ||
+    pendingSellersQuery.isLoading;
 
   if (isLoading) {
     return (
@@ -130,6 +147,7 @@ export default function AdminDashboardPage() {
   const sellers = sellerPerformanceQuery.data || [];
   const categories = categoryPerformanceQuery.data || [];
   const fulfillment = orderFulfillmentQuery.data || [];
+  const pendingSellers = pendingSellersQuery.data || [];
 
   const topSeller = sellers[0];
   const fastestGrowingSeller = [...sellers].sort((left, right) => right.growth_rate - left.growth_rate)[0];
@@ -204,41 +222,70 @@ export default function AdminDashboardPage() {
           </div>
         </Panel>
 
-        <ChartPanel title="Fulfillment Health" subtitle="Order distribution by current status." icon={Boxes}>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <defs>
-                <linearGradient id="pieGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="rgba(0, 255, 255, 0.8)" />
-                  <stop offset="100%" stopColor="rgba(0, 255, 255, 0.2)" />
-                </linearGradient>
-              </defs>
-              <Pie
-                data={fulfillment}
-                dataKey="count"
-                nameKey="status"
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={80}
-                paddingAngle={5}
-                isAnimationActive={true}
-                animationDuration={300}
-              >
-                {fulfillment.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.status] || "#94a3b8"} stroke="none" fillOpacity={0.8} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  background: "#081122",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 16,
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </ChartPanel>
+        <div className="space-y-6">
+          <ChartPanel title="Fulfillment Health" subtitle="Order distribution by current status." icon={Boxes}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <defs>
+                  <linearGradient id="pieGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="rgba(0, 255, 255, 0.8)" />
+                    <stop offset="100%" stopColor="rgba(0, 255, 255, 0.2)" />
+                  </linearGradient>
+                </defs>
+                <Pie
+                  data={fulfillment}
+                  dataKey="count"
+                  nameKey="status"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  isAnimationActive={true}
+                  animationDuration={300}
+                >
+                  {fulfillment.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.status] || "#94a3b8"} stroke="none" fillOpacity={0.8} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    background: "#081122",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 16,
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartPanel>
+
+          <Panel title="Pending Seller Reviews" subtitle="Review and approve new store applications." icon={Shield}>
+            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+              {pendingSellers.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 opacity-40">
+                  <Shield className="h-12 w-12 mb-4 text-primary" />
+                  <p className="text-sm font-medium">No pending storefront applications</p>
+                </div>
+              ) : (
+                pendingSellers.map((seller) => (
+                  <div key={seller.seller_id} className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.03] border border-white/10 group hover:border-primary/30 transition-all">
+                    <div className="min-w-0 flex-1 mr-4">
+                      <p className="font-semibold text-white truncate">{seller.company_name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{seller.contact_email}</p>
+                    </div>
+                    <button
+                      onClick={() => verifySellerMutation.mutate(seller.seller_id)}
+                      disabled={verifySellerMutation.isPending}
+                      className="px-4 py-2 rounded-xl bg-primary/10 text-primary text-xs font-bold hover:bg-primary/20 active:scale-95 transition-all disabled:opacity-50"
+                    >
+                      {verifySellerMutation.isPending ? "..." : "Approve"}
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </Panel>
+        </div>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">

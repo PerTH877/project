@@ -385,6 +385,10 @@ BEGIN
         fee_percent := COALESCE(cart_rec.fee_percentage, 0);
         INSERT INTO order_items (order_id, variant_id, quantity, unit_price, platform_fee_percent)
         VALUES (new_order_id, cart_rec.variant_id, cart_rec.quantity, cart_rec.unit_price, fee_percent);
+
+        UPDATE Inventory 
+        SET stock_quantity = stock_quantity - cart_rec.quantity 
+        WHERE variant_id = cart_rec.variant_id;
     END LOOP;
 
     UPDATE orders
