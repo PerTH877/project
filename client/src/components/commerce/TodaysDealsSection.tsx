@@ -40,37 +40,41 @@ export function TodaysDealsSection() {
   }, [activeDeals]);
 
   useEffect(() => {
-    if (!visibleDeals || !visibleDeals.length) return;
-
     const interval = setInterval(() => {
-      let updatedVisible = [...visibleDeals];
-      const newTimeLeft: Record<number, string> = {};
-      const now = Date.now();
-      let hasChanges = false;
+      setVisibleDeals((prevDeals) => {
+        if (!prevDeals || !prevDeals.length) return prevDeals;
 
-      for (const deal of updatedVisible) {
-        if (!deal.end_time) continue;
-        const diff = new Date(deal.end_time).getTime() - now;
+        let updatedVisible = [...prevDeals];
+        const newTimeLeft: Record<number, string> = {};
+        const now = Date.now();
+        let hasChanges = false;
 
-        if (diff <= 0) {
-          updatedVisible = updatedVisible.filter(d => d.product_id !== deal.product_id);
-          hasChanges = true;
-        } else {
-          const hours = Math.floor(diff / (1000 * 60 * 60));
-          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-          newTimeLeft[deal.product_id] = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        for (const deal of updatedVisible) {
+          if (!deal.end_time) continue;
+          const diff = new Date(deal.end_time).getTime() - now;
+
+          if (diff <= 0) {
+            updatedVisible = updatedVisible.filter(d => d.product_id !== deal.product_id);
+            hasChanges = true;
+          } else {
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            newTimeLeft[deal.product_id] = `${hours
+              .toString()
+              .padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds
+              .toString()
+              .padStart(2, "0")}`;
+          }
         }
-      }
 
-      setTimeLeft(newTimeLeft);
-      if (hasChanges) {
-        setVisibleDeals(updatedVisible);
-      }
+        setTimeLeft(newTimeLeft);
+        return hasChanges ? updatedVisible : prevDeals;
+      });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [visibleDeals]);
+  }, []);
 
   useEffect(() => {
     if (!visibleDeals || visibleDeals.length === 0) return;

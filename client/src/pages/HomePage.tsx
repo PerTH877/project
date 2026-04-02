@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { productsService } from "@/services/products";
 import { useAuthStore } from "@/store/authStore";
-import { ChevronRight, Star, ChevronLeft } from "lucide-react";
+import { ChevronRight, Star } from "lucide-react";
 import { HeroShowcase } from "@/components/commerce/HeroShowcase";
 import { TodaysDealsSection } from "@/components/commerce/TodaysDealsSection";
 

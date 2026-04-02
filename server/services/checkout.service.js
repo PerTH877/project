@@ -46,7 +46,9 @@ async function reviewCheckoutSummary(pool, userId) {
 
 
 async function executeCheckout(pool, userId, addressId, paymentMethod = "Cash on Delivery") {
-  if (!VALID_PAYMENT_METHODS.includes(paymentMethod)) {
+  // Ensure the demo auto-complete logic still runs even if frontend sends null/undefined
+  const method = paymentMethod || "Cash on Delivery";
+  if (!VALID_PAYMENT_METHODS.includes(method)) {
     const err = new Error(
       `Invalid payment method. Accepted: ${VALID_PAYMENT_METHODS.join(", ")}`
     );
@@ -128,7 +130,7 @@ async function executeCheckout(pool, userId, addressId, paymentMethod = "Cash on
     await checkoutRepository.createPayment(
       client,
       order.order_id,
-      paymentMethod,
+      method,
       order.total_amount
     );
 
@@ -160,7 +162,7 @@ async function executeCheckout(pool, userId, addressId, paymentMethod = "Cash on
         status: order.status,
         total_amount: Number(order.total_amount),
         order_date: order.order_date,
-        payment_method: paymentMethod,
+        payment_method: method,
         tracking_number: trackingNumber,
         address_city: address.city,
       },

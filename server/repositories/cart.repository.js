@@ -39,6 +39,7 @@ async function getCartTotal(client, userId) {
   return Number(result.rows[0]?.total ?? 0);
 }
 
+
 async function getVariantWithStock(client, variantId) {
   await client.query(
     `SELECT inventory_id FROM inventory WHERE variant_id = $1 FOR UPDATE`,

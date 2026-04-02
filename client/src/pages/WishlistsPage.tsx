@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Heart, Plus, Search, Trash2 } from "lucide-react";
+import { Heart, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { EmptyState, ErrorState } from "@/components/EmptyState";
 import { Skeleton } from "@/components/Skeleton";

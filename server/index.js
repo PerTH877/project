@@ -23,7 +23,12 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
-app.use(cors());
+const corsOptions = {
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true,
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.use('/api/warehouses', warehouseRoutes);
@@ -57,13 +62,6 @@ startSubscriptionExpirationCron();
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
-  // Force DB patch on boot to clear out the is_saved issue.
-  pool.query(`
-    ALTER TABLE cart 
-    ADD COLUMN IF NOT EXISTS is_saved BOOLEAN DEFAULT FALSE,
-    ADD COLUMN IF NOT EXISTS added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
-  `).then(() => console.log('✅ Cart table schema patched dynamically!'))
-    .catch(err => console.error('⚠️ Could not patch DB schema on boot:', err.message));
 });
 
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, ChevronRight, CreditCard, Lock, MapPin, Package, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Lock, MapPin, Package, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { cartService, checkoutService } from "@/services/cart";
 import { addressesService } from "@/services/addresses";
@@ -11,30 +11,10 @@ import { Panel, PageHeader, PageShell } from "@/components/ui/Surface";
 import { formatCurrencyBDT, formatDate } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 
-type CheckoutStep = "ADDRESS" | "PAYMENT" | "REVIEW";
+type CheckoutStep = "ADDRESS" | "REVIEW";
 type PaymentMethod = "Cash on Delivery" | "Credit Card" | "bKash";
 
-const paymentOptions: Array<{
-  value: PaymentMethod;
-  label: string;
-  description: string;
-}> = [
-  {
-    value: "Cash on Delivery",
-    label: "Cash on Delivery",
-    description: "Good fallback if you want the simplest supported checkout path.",
-  },
-  {
-    value: "Credit Card",
-    label: "Credit Card",
-    description: "Card payments already match the backend validation list.",
-  },
-  {
-    value: "bKash",
-    label: "bKash",
-    description: "Mobile-first payment option supported by the current API.",
-  },
-];
+
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -69,24 +49,17 @@ export default function CheckoutPage() {
 
   const setAddressMutation = useMutation({
     mutationFn: (addressId: number) => checkoutService.setAddress(addressId),
-    onSuccess: () => setStep("PAYMENT"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["checkout-review"] });
+      setStep("REVIEW");
+    },
     onError: (error: any) => {
       const msg = error.response?.data?.error || "Failed to validate that address.";
       toast.error(msg);
     },
   });
 
-  const setPaymentMutation = useMutation({
-    mutationFn: (method: PaymentMethod) => checkoutService.setPayment(method),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["checkout-review"] });
-      setStep("REVIEW");
-    },
-    onError: (error: any) => {
-      const msg = error.response?.data?.error || "Payment method rejected by the backend.";
-      toast.error(msg);
-    },
-  });
+
 
   const reviewQuery = useQuery({
     queryKey: ["checkout-review", selectedAddressId, selectedPaymentMethod],
@@ -116,7 +89,6 @@ export default function CheckoutPage() {
 
   const steps = [
     { id: "ADDRESS", label: "Shipping Link" },
-    { id: "PAYMENT", label: "Secure Auth" },
     { id: "REVIEW", label: "Final Review" },
   ];
 
@@ -171,8 +143,8 @@ export default function CheckoutPage() {
     <PageShell className="space-y-8">
       <PageHeader
         eyebrow="Checkout"
-        title="Confirm your delivery address, choose a supported payment method, and place the order."
-        description="This flow now matches the current backend: address validation, payment selection, review summary, and final order execution."
+        title="Confirm your delivery address and place the order."
+        description="This simplified flow is optimized for the demo environment: address validation, review summary, and final order execution."
         meta={
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-4 py-2 text-sm text-emerald-100">
             <Lock className="h-4 w-4" />
@@ -262,52 +234,13 @@ export default function CheckoutPage() {
                   onClick={() => selectedAddressId && setAddressMutation.mutate(selectedAddressId)}
                   className="action-primary disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Continue to payment
+                  Continue to review
                 </button>
               </div>
             </Panel>
           ) : null}
 
-          {step === "PAYMENT" ? (
-            <Panel
-              title="Choose a payment method"
-              subtitle="These options are restricted to what the backend currently accepts."
-              icon={CreditCard}
-            >
-              <div className="space-y-4">
-                {paymentOptions.map((option) => (
-                  <label
-                    key={option.value}
-                    className={`flex cursor-pointer gap-4 rounded-[24px] border p-5 transition ${
-                      selectedPaymentMethod === option.value
-                        ? "border-magenta-300 bg-magenta-300/10 shadow-magenta"
-                        : "border-white/8 bg-white/[0.03] hover:border-white/20"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="payment_method"
-                      checked={selectedPaymentMethod === option.value}
-                      onChange={() => setSelectedPaymentMethod(option.value)}
-                      className="mt-1 h-4 w-4 border-white/20 bg-transparent text-magenta-300"
-                    />
-                    <div className="min-w-0">
-                      <p className="display-font text-lg text-white">{option.label}</p>
-                      <p className="mt-2 text-sm leading-7 text-muted-foreground">{option.description}</p>
-                    </div>
-                  </label>
-                ))}
-              </div>
-              <div className="mt-6 flex justify-between border-t border-white/8 pt-5">
-                <button onClick={() => setStep("ADDRESS")} className="action-secondary">
-                  Back
-                </button>
-                <button onClick={() => setPaymentMutation.mutate(selectedPaymentMethod)} className="action-primary">
-                  Review order
-                </button>
-              </div>
-            </Panel>
-          ) : null}
+
 
           {step === "REVIEW" ? (
             <Panel
@@ -372,7 +305,7 @@ export default function CheckoutPage() {
                   </div>
 
                   <div className="flex justify-between border-t border-white/8 pt-5">
-                    <button onClick={() => setStep("PAYMENT")} className="action-secondary">
+                    <button onClick={() => setStep("ADDRESS")} className="action-secondary">
                       Back
                     </button>
                     <button
@@ -437,7 +370,7 @@ export default function CheckoutPage() {
             </div>
           ) : (
             <div className="mt-6 rounded-[22px] border border-dashed border-white/12 bg-black/15 p-5 text-sm leading-7 text-muted-foreground">
-              Totals appear after you finish the payment step and open the review stage.
+              Totals appear after you confirm your address and open the review stage.
             </div>
           )}
 

@@ -1,15 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
-import { productsService } from "@/services/products";
 import { TodaysDealsSection } from "@/components/commerce/TodaysDealsSection";
 
 export default function DealsPage() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["dealsPageProducts"],
-    queryFn: () => productsService.list({ page_size: 15 }),
-  });
-
-  const products = data?.products || [];
-
   return (
     <div className="min-h-screen bg-[#050810] py-12 px-4 shadow-[inset_0_0_100px_rgba(0,0,0,0.8)]">
       <div className="max-w-[1600px] mx-auto mb-12 border-b border-cyan-500/20 pb-6">
@@ -21,7 +12,7 @@ export default function DealsPage() {
       </div>
       
       <div className="max-w-[1600px] mx-auto">
-        <TodaysDealsSection products={products} isLoading={isLoading} />
+        <TodaysDealsSection />
       </div>
     </div>
   );

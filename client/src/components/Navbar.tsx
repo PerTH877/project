@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { cartService } from "@/services/cart";
 import { productsService } from "@/services/products";
 import { useAuthStore } from "@/store/authStore";
-import { Search, ShoppingCart, Menu, Zap } from "lucide-react";
+import { Search, ShoppingCart, Menu } from "lucide-react";
 import { ParuvoLogo } from "@/components/branding/ParuvoLogo";
 
 export function Navbar() {

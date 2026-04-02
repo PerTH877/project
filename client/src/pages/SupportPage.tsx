@@ -1,4 +1,4 @@
-import { Mail, MessageSquare, PhoneCall } from "lucide-react";
+import { MessageSquare, PhoneCall } from "lucide-react";
 
 export default function SupportPage() {
   return (

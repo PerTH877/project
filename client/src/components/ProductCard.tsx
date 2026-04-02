@@ -103,7 +103,7 @@ export function ProductCard({ product, density, compact = false, variantId }: Pr
       }
 
       // Add — resolve a target wishlist
-      let wishlists = queryClient.getQueryData<Wishlist[]>(["wishlists"]) ?? [];
+      const wishlists = queryClient.getQueryData<Wishlist[]>(["wishlists"]) ?? [];
       let targetList = wishlists[0];
 
       if (!targetList) {
