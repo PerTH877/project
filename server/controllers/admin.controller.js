@@ -197,6 +197,16 @@ const getTopProducts = async (req, res) => {
   }
 };
 
+const getOrderFulfillment = async (req, res) => {
+  try {
+    const data = await adminService.formatOrderFulfillment();
+    return res.json(data);
+  } catch (err) {
+    console.error("getOrderFulfillment:", err.message);
+    return res.status(500).json({ error: "Server error" });
+  }
+};
+
 module.exports = {
   adminLogin,
   getCurrentAdmin,
@@ -214,4 +224,5 @@ module.exports = {
   getTopCategories,
   getTopSellers,
   getTopProducts,
+  getOrderFulfillment,
 };

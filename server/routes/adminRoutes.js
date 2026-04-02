@@ -17,6 +17,7 @@ const {
   getTopCategories,
   getTopSellers,
   getTopProducts,
+  getOrderFulfillment,
 } = require("../controllers/admin.controller");
 
 router.post("/login", adminLogin);
@@ -97,6 +98,13 @@ router.get(
   authMiddleware,
   requireRole("admin"),
   getTopProducts
+);
+
+router.get(
+  "/analytics/order-fulfillment",
+  authMiddleware,
+  requireRole("admin"),
+  getOrderFulfillment
 );
 
 module.exports = router;

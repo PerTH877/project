@@ -15,6 +15,9 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -53,29 +56,9 @@ export default function AdminDashboardPage() {
     queryKey: ["admin-category-performance"],
     queryFn: adminService.getCategoryPerformance,
   });
-  const demandOpportunityQuery = useQuery({
-    queryKey: ["admin-demand-opportunities"],
-    queryFn: adminService.getDemandOpportunities,
-  });
-  const warehousePressureQuery = useQuery({
-    queryKey: ["admin-warehouse-pressure"],
-    queryFn: adminService.getWarehousePressure,
-  });
-  const geographicDemandQuery = useQuery({
-    queryKey: ["admin-geographic-demand"],
-    queryFn: adminService.getGeographicDemand,
-  });
-  const returnsRiskQuery = useQuery({
-    queryKey: ["admin-returns-risk"],
-    queryFn: adminService.getReturnsRisk,
-  });
-  const inventoryRiskQuery = useQuery({
-    queryKey: ["admin-inventory-risk"],
-    queryFn: adminService.getInventoryRisk,
-  });
-  const conversionSignalsQuery = useQuery({
-    queryKey: ["admin-conversion-signals"],
-    queryFn: adminService.getConversionSignals,
+  const orderFulfillmentQuery = useQuery({
+    queryKey: ["admin-order-fulfillment"],
+    queryFn: adminService.getOrderFulfillment,
   });
 
   const createCategoryMutation = useMutation({
@@ -113,7 +96,6 @@ export default function AdminDashboardPage() {
         capacity: "",
       });
       queryClient.invalidateQueries({ queryKey: ["admin-overview"] });
-      queryClient.invalidateQueries({ queryKey: ["admin-warehouse-pressure"] });
       queryClient.invalidateQueries({ queryKey: ["warehouses"] });
       toast.success("Warehouse created");
     },
@@ -126,12 +108,7 @@ export default function AdminDashboardPage() {
     overviewQuery.isLoading ||
     sellerPerformanceQuery.isLoading ||
     categoryPerformanceQuery.isLoading ||
-    demandOpportunityQuery.isLoading ||
-    warehousePressureQuery.isLoading ||
-    geographicDemandQuery.isLoading ||
-    returnsRiskQuery.isLoading ||
-    inventoryRiskQuery.isLoading ||
-    conversionSignalsQuery.isLoading;
+    orderFulfillmentQuery.isLoading;
 
   if (isLoading) {
     return (
@@ -152,56 +129,20 @@ export default function AdminDashboardPage() {
   const overview = overviewQuery.data!;
   const sellers = sellerPerformanceQuery.data || [];
   const categories = categoryPerformanceQuery.data || [];
-  const opportunities = demandOpportunityQuery.data || [];
-  const warehouses = warehousePressureQuery.data || [];
-  const cities = geographicDemandQuery.data || [];
-  const returnsRisk = returnsRiskQuery.data;
-  const inventoryRisk = inventoryRiskQuery.data || [];
-  const conversionSignals = conversionSignalsQuery.data || [];
+  const fulfillment = orderFulfillmentQuery.data || [];
 
   const topSeller = sellers[0];
   const fastestGrowingSeller = [...sellers].sort((left, right) => right.growth_rate - left.growth_rate)[0];
   const topCategory = categories[0];
   const topUnitCategory = [...categories].sort((left, right) => right.units_sold - left.units_sold)[0];
-  const pressureWarehouse = warehouses[0];
-  const topOpportunity = opportunities[0];
-  const topLeak = conversionSignals[0];
-  const topInventoryRisk = inventoryRisk[0];
-  const topReturnSeller = returnsRisk?.sellers[0];
-  const risingCity = [...cities].sort((left, right) => right.growth_rate - left.growth_rate)[0];
 
-  const priorityActions = [
-    pressureWarehouse
-      ? {
-          title: `Relieve ${pressureWarehouse.name}`,
-          detail: `${pressureWarehouse.pending_orders} pending orders and ${pressureWarehouse.low_stock_variants} low-stock variants are concentrated in ${pressureWarehouse.city}.`,
-        }
-      : null,
-    topOpportunity
-      ? {
-          title: `Restock ${topOpportunity.title}`,
-          detail: `${topOpportunity.browse_count} product views and ${topOpportunity.cart_adds} cart adds are outpacing ${topOpportunity.stock_units} units of stock.`,
-        }
-      : null,
-    topLeak
-      ? {
-          title: `Review ${topLeak.title}`,
-          detail: `${topLeak.browse_count} views are only converting to ${topLeak.cart_to_order_rate.toFixed(1)}% cart-to-order progress.`,
-        }
-      : null,
-    topInventoryRisk
-      ? {
-          title: `Replenish ${topInventoryRisk.title}`,
-          detail: `${topInventoryRisk.stock_units} units remain while recent sales and carts point to a ${topInventoryRisk.risk_score.toFixed(1)} inventory risk score.`,
-        }
-      : null,
-    topReturnSeller
-      ? {
-          title: `Audit ${topReturnSeller.company_name}`,
-          detail: `${topReturnSeller.return_rate.toFixed(1)}% return rate and ${formatCurrencyBDT(topReturnSeller.refund_total)} in refunds warrant a closer look.`,
-        }
-      : null,
-  ].filter(Boolean) as Array<{ title: string; detail: string }>;
+  const STATUS_COLORS: Record<string, string> = {
+    Pending: "#f59e0b",
+    Processing: "#3b82f6",
+    Shipped: "#8b5cf6",
+    Delivered: "#10b981",
+    Cancelled: "#ef4444",
+  };
 
   return (
     <PageShell className="space-y-8">
@@ -216,13 +157,13 @@ export default function AdminDashboardPage() {
         <StatCard label="Customers" numericValue={overview.summary.customer_count} hint="Registered buyer accounts" accent="cyan" />
         <StatCard label="Verified sellers" numericValue={overview.summary.verified_seller_count} hint="Approved storefronts" accent="emerald" />
         <StatCard label="GMV" value={formatCurrencyBDT(overview.summary.gross_merchandise_value)} hint="Total merchandise value" accent="magenta" />
+        <StatCard label="Net Platform Revenue" value={formatCurrencyBDT(overview.summary.total_platform_profit)} hint="Total commission earned" accent="emerald" />
         <StatCard label="Top seller" value={topSeller?.company_name || "No sales"} hint={topSeller ? formatCurrencyBDT(topSeller.total_gmv) : "Awaiting activity"} accent="violet" />
         <StatCard label="Top category" value={topCategory?.category_name || "No category data"} hint={topCategory ? formatCurrencyBDT(topCategory.gmv) : "Awaiting activity"} accent="cyan" />
-        <StatCard label="Highest pressure" value={pressureWarehouse?.city || "Balanced"} hint={pressureWarehouse ? `${pressureWarehouse.pressure_score.toFixed(1)} pressure score` : "No pressure detected"} accent="amber" />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <Panel title="Marketplace health" subtitle="Top-line view across buyers, sellers, orders, and risk." icon={Shield}>
+      <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
+        <Panel title="Marketplace health" subtitle="Top-line view across buyers, sellers, and order performance." icon={Shield}>
           <div className="grid gap-4 md:grid-cols-2">
             <InsightCard
               title="Winning seller"
@@ -247,7 +188,7 @@ export default function AdminDashboardPage() {
               value={topCategory?.category_name || "No category leader yet"}
               detail={
                 topCategory
-                  ? `${formatNumber(topCategory.units_sold)} units sold with ${topCategory.browse_count} product views`
+                  ? `${formatNumber(topCategory.units_sold)} units sold with ${topCategory.order_count} orders`
                   : "Category performance will appear here."
               }
             />
@@ -260,46 +201,44 @@ export default function AdminDashboardPage() {
                   : "Unit sales leaders will appear here."
               }
             />
-            <InsightCard
-              title="Demand gap"
-              value={topOpportunity?.title || "No demand gap detected"}
-              detail={
-                topOpportunity
-                  ? `${topOpportunity.stock_units} units on hand for ${topOpportunity.cart_adds} cart adds and ${topOpportunity.wishlist_adds} wishlist saves`
-                  : "Demand opportunity scoring will appear here."
-              }
-            />
-            <InsightCard
-              title="Return exposure"
-              value={topReturnSeller?.company_name || "Low return exposure"}
-              detail={
-                topReturnSeller
-                  ? `${topReturnSeller.return_rate.toFixed(1)}% return rate`
-                  : "Return risk will appear when returned orders exist."
-              }
-            />
-            <InsightCard
-              title="Rising city"
-              value={risingCity?.city || "Demand is steady"}
-              detail={
-                risingCity
-                  ? `${risingCity.growth_rate.toFixed(1)}% growth with ${formatCurrencyBDT(risingCity.gmv)} GMV`
-                  : "Geographic growth will appear here."
-              }
-            />
           </div>
         </Panel>
 
-        <Panel title="Priority actions" subtitle="The shortest path to operational impact." icon={AlertTriangle}>
-          <div className="space-y-3">
-            {priorityActions.map((action) => (
-              <div key={action.title} className="rounded-[24px] border border-white/8 bg-white/[0.03] p-4">
-                <p className="font-semibold text-white">{action.title}</p>
-                <p className="mt-2 text-sm leading-7 text-muted-foreground">{action.detail}</p>
-              </div>
-            ))}
-          </div>
-        </Panel>
+        <ChartPanel title="Fulfillment Health" subtitle="Order distribution by current status." icon={Boxes}>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <defs>
+                <linearGradient id="pieGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="rgba(0, 255, 255, 0.8)" />
+                  <stop offset="100%" stopColor="rgba(0, 255, 255, 0.2)" />
+                </linearGradient>
+              </defs>
+              <Pie
+                data={fulfillment}
+                dataKey="count"
+                nameKey="status"
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={80}
+                paddingAngle={5}
+                isAnimationActive={true}
+                animationDuration={300}
+              >
+                {fulfillment.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.status] || "#94a3b8"} stroke="none" fillOpacity={0.8} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  background: "#081122",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 16,
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartPanel>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
@@ -329,6 +268,12 @@ export default function AdminDashboardPage() {
         <ChartPanel title="Category revenue" subtitle="GMV by category with demand context." icon={BarChart3}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={categories.slice(0, 6)}>
+              <defs>
+                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.8} />
+                  <stop offset="100%" stopColor="#22d3ee" stopOpacity={0.2} />
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148,163,184,0.14)" />
               <XAxis dataKey="category_name" tick={{ fill: "#94a3b8", fontSize: 12 }} />
               <YAxis tick={{ fill: "#94a3b8", fontSize: 12 }} />
@@ -340,159 +285,15 @@ export default function AdminDashboardPage() {
                   borderRadius: 16,
                 }}
               />
-              <Bar dataKey="gmv" fill="#22d3ee" radius={[12, 12, 0, 0]} />
+              <Bar dataKey="gmv" fill="url(#barGradient)" radius={[12, 12, 0, 0]} isAnimationActive={true} animationDuration={300} />
             </BarChart>
           </ResponsiveContainer>
         </ChartPanel>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-        <Panel title="Demand opportunities" subtitle="High attention, lighter conversion, or thin stock." icon={PackageSearch}>
-          <div className="space-y-3">
-            {opportunities.slice(0, 6).map((item) => (
-              <div key={item.product_id} className="rounded-[24px] border border-white/8 bg-white/[0.03] p-4">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-white">{item.title}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {item.seller_name} | {item.category_name}
-                    </p>
-                  </div>
-                  <StatusBadge label={`${item.opportunity_score} score`} tone="amber" />
-                </div>
-                <p className="mt-3 text-sm text-muted-foreground">
-                  {item.browse_count} views, {item.cart_adds} carts, {item.wishlist_adds} wishlists, {item.stock_units} units in stock
-                </p>
-              </div>
-            ))}
-          </div>
-        </Panel>
-
-        <Panel title="Conversion leaks" subtitle="Products with attention that is not turning into orders." icon={Boxes}>
-          <DataTable columns={["Product", "Views", "Cart rate", "Order rate", "Gap score"]}>
-            {conversionSignals.slice(0, 8).map((item) => (
-              <tr key={item.product_id}>
-                <td>
-                  <div>
-                    <p className="font-semibold text-white">{item.title}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{item.seller_name}</p>
-                  </div>
-                </td>
-                <td>{formatNumber(item.browse_count)}</td>
-                <td>{item.browse_to_cart_rate.toFixed(1)}%</td>
-                <td>{item.cart_to_order_rate.toFixed(1)}%</td>
-                <td>{formatNumber(item.conversion_gap_score)}</td>
-              </tr>
-            ))}
-          </DataTable>
-        </Panel>
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <Panel title="Warehouse pressure" subtitle="Stock stress, pending orders, and return load by warehouse." icon={Warehouse}>
-          <DataTable columns={["Warehouse", "Stock", "Pending", "Returns", "Pressure"]}>
-            {warehouses.map((warehouse) => (
-              <tr key={warehouse.warehouse_id}>
-                <td>
-                  <div>
-                    <p className="font-semibold text-white">{warehouse.name}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{warehouse.city}</p>
-                  </div>
-                </td>
-                <td>{formatNumber(warehouse.stock_units)}</td>
-                <td>
-                  {formatNumber(warehouse.pending_orders)}
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {warehouse.low_stock_variants} low-stock variants
-                  </p>
-                </td>
-                <td>{formatNumber(warehouse.return_volume)}</td>
-                <td>{warehouse.pressure_score.toFixed(1)}</td>
-              </tr>
-            ))}
-          </DataTable>
-        </Panel>
-
-        <ChartPanel title="Demand by city" subtitle="Where orders and revenue are concentrating." icon={MapPinned}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={cities.slice(0, 6)}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148,163,184,0.14)" />
-              <XAxis dataKey="city" tick={{ fill: "#94a3b8", fontSize: 12 }} />
-              <YAxis tick={{ fill: "#94a3b8", fontSize: 12 }} />
-              <Tooltip
-                formatter={(value: number) => formatCurrencyBDT(value)}
-                contentStyle={{
-                  background: "#081122",
-                  border: "1px solid rgba(192,132,252,0.2)",
-                  borderRadius: 16,
-                }}
-              />
-              <Bar dataKey="gmv" fill="#c084fc" radius={[12, 12, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartPanel>
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-        <Panel title="Inventory risk" subtitle="Products likely to need replenishment based on recent demand." icon={AlertTriangle}>
-          <DataTable columns={["Product", "Stock", "Recent sales", "Cart adds", "Risk"]}>
-            {inventoryRisk.slice(0, 8).map((item) => (
-              <tr key={item.product_id}>
-                <td>
-                  <div>
-                    <p className="font-semibold text-white">{item.title}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {item.seller_name} | {item.category_name}
-                    </p>
-                  </div>
-                </td>
-                <td>{formatNumber(item.stock_units)}</td>
-                <td>{formatNumber(item.recent_units_sold)}</td>
-                <td>{formatNumber(item.cart_adds)}</td>
-                <td>{item.risk_score.toFixed(1)}</td>
-              </tr>
-            ))}
-          </DataTable>
-        </Panel>
-
-        <Panel title="Returns risk" subtitle="Sellers and products with higher refund exposure." icon={AlertTriangle}>
-          <div className="space-y-4">
-            <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-muted-foreground">Sellers</p>
-              <div className="mt-3 space-y-3">
-                {returnsRisk?.sellers.slice(0, 3).map((seller) => (
-                  <div key={seller.seller_id} className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-white">{seller.company_name}</p>
-                      <p className="text-sm text-muted-foreground">{seller.return_count} returns</p>
-                    </div>
-                    <StatusBadge label={`${seller.return_rate.toFixed(1)}%`} tone="rose" />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-muted-foreground">Products</p>
-              <div className="mt-3 space-y-3">
-                {returnsRisk?.products.slice(0, 3).map((product) => (
-                  <div key={product.product_id} className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-white">{product.title}</p>
-                      <p className="text-sm text-muted-foreground">{product.return_count} returns</p>
-                    </div>
-                    <StatusBadge label={`${product.return_rate.toFixed(1)}%`} tone="rose" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </Panel>
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+      <div className="grid gap-6">
         <Panel title="Admin tools" subtitle="Add categories and warehouse capacity without leaving the dashboard." icon={Shield}>
-          <div className="space-y-6">
+          <div className="grid gap-8 md:grid-cols-2">
             <div className="space-y-3">
               <p className="text-sm font-semibold text-white">Create category</p>
               <input value={categoryName} onChange={(event) => setCategoryName(event.target.value)} placeholder="Category name" className="field-input" />
@@ -525,22 +326,6 @@ export default function AdminDashboardPage() {
             </div>
           </div>
         </Panel>
-
-        <Panel title="City demand summary" subtitle="Top cities, strongest category, and recent growth." icon={MapPinned}>
-          <DataTable columns={["City", "GMV", "Orders", "Top category", "Growth"]}>
-            {cities.slice(0, 8).map((city) => (
-              <tr key={city.city}>
-                <td>{city.city}</td>
-                <td>{formatCurrencyBDT(city.gmv)}</td>
-                <td>{formatNumber(city.order_count)}</td>
-                <td>{city.top_category}</td>
-                <td className={city.growth_rate >= 0 ? "text-emerald-200" : "text-rose-200"}>
-                  {city.growth_rate.toFixed(1)}%
-                </td>
-              </tr>
-            ))}
-          </DataTable>
-        </Panel>
       </div>
     </PageShell>
   );
@@ -566,9 +351,10 @@ function ChartPanel({
 
 function InsightCard({ title, value, detail }: { title: string; value: string; detail: string }) {
   return (
-    <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-4">
+    <div className="rounded-[24px] border border-white/10 bg-white/[0.04] p-5 relative overflow-hidden group">
+      <div className="absolute inset-0 border-l-2 border-primary/20 group-hover:border-primary/50 transition-colors" />
       <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-muted-foreground">{title}</p>
-      <p className="mt-3 text-lg font-semibold text-white">{value}</p>
+      <p className="hud-number mt-3 text-lg font-semibold text-white">{value}</p>
       <p className="mt-2 text-sm leading-7 text-muted-foreground">{detail}</p>
     </div>
   );

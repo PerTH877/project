@@ -318,6 +318,7 @@ export interface AdminOverview {
     active_product_count: number;
     order_count: number;
     gross_merchandise_value: number;
+    total_platform_profit: number;
   };
   warehouses: Warehouse[];
 }
@@ -431,6 +432,11 @@ export interface AdminConversionSignal {
   browse_to_cart_rate: number;
   cart_to_order_rate: number;
   conversion_gap_score: number;
+}
+
+export interface AdminFulfillmentHealth {
+  status: string;
+  count: number;
 }
 
 export interface OrderSummary {

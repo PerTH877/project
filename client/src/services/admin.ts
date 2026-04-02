@@ -3,6 +3,7 @@ import type {
   AdminCategoryPerformance,
   AdminConversionSignal,
   AdminDemandOpportunity,
+  AdminFulfillmentHealth,
   AdminGeographicDemand,
   AdminInventoryRisk,
   AdminOverview,
@@ -84,5 +85,9 @@ export const adminService = {
   getTopProducts: async (): Promise<TopProduct[]> => {
     const res = await api.get("/admin/analytics/top-products");
     return res.data.products;
+  },
+  getOrderFulfillment: async (): Promise<AdminFulfillmentHealth[]> => {
+    const res = await api.get("/admin/analytics/order-fulfillment");
+    return res.data.fulfillment;
   },
 };

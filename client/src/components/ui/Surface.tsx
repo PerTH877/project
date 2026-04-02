@@ -11,7 +11,7 @@ export function PageShell({
   children: ReactNode;
   className?: string;
 }) {
-  return <div className={cn("shell-width pb-16 pt-7 sm:pt-9", className)}>{children}</div>;
+  return <div className={cn("tactical-grid shell-width pb-16 pt-7 sm:pt-9", className)}>{children}</div>;
 }
 
 export function PageHeader({
@@ -74,7 +74,10 @@ export function Panel({
   contentClassName?: string;
 }) {
   return (
-    <section className={cn("hud-panel p-5 sm:p-6", className)}>
+    <section className={cn("hud-panel hud-blur p-5 sm:p-6", className)}>
+      <div className="scanning-layer">
+        <div className="scanning-line" />
+      </div>
       {title ? (
         <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-2">
@@ -116,6 +119,7 @@ export function StatCard({
   accent = "cyan",
   trend,
   className,
+  hideBlur = false,
 }: {
   label: string;
   value?: ReactNode;
@@ -126,13 +130,18 @@ export function StatCard({
   accent?: keyof typeof accentClasses;
   trend?: string;
   className?: string;
+  hideBlur?: boolean;
 }) {
   return (
     <div
       className={cn(
-        "hud-panel p-5",
+        "hud-panel p-5 border-white/5 border-l-2",
+        !hideBlur && "hud-blur",
+        accent === "cyan" && "border-l-primary hud-glow-cyan",
+        accent === "magenta" && "border-l-accent hud-glow-magenta",
         className
       )}
+      style={{ transform: "translateZ(0)" }}
     >
       <div
         className={cn(
@@ -143,7 +152,7 @@ export function StatCard({
       <div className="relative flex items-start justify-between gap-4">
         <div className="space-y-2">
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">{label}</p>
-          <p className="display-font text-2xl font-semibold text-white sm:text-3xl">
+          <p className="hud-number text-2xl font-semibold text-white sm:text-3xl">
             {numericValue !== undefined ? (
               <AnimatedCounter value={numericValue} format={format ?? formatCompactNumber} />
             ) : (

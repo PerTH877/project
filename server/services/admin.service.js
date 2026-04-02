@@ -71,6 +71,7 @@ const formatAdminOverview = async () => {
       active_product_count: asNumber(summary.active_product_count),
       order_count: asNumber(summary.order_count),
       gross_merchandise_value: asNumber(summary.gross_merchandise_value),
+      total_platform_profit: asNumber(summary.total_platform_profit),
     },
     warehouses: warehouses.map((row) => ({
       ...row,
@@ -266,11 +267,17 @@ const getPendingSellers = async () => {
   return { sellers: rows };
 };
 
+const formatOrderFulfillment = async () => {
+  const rows = await adminRepository.getOrderFulfillmentData();
+  return { fulfillment: rows };
+};
+
 module.exports = {
   generateAdminToken,
   verifyAdminCredentials,
   processSellerVerification,
   formatAdminOverview,
+  formatOrderFulfillment,
   formatSellerPerformance,
   formatCategoryPerformance,
   formatDemandOpportunities,

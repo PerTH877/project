@@ -37,7 +37,8 @@ const getAdminOverviewData = async () => {
          (SELECT COUNT(*)::int FROM sellers WHERE is_verified = FALSE) AS pending_seller_count,
          (SELECT COUNT(*)::int FROM products WHERE is_active = TRUE) AS active_product_count,
          (SELECT COUNT(*)::int FROM orders) AS order_count,
-         (SELECT COALESCE(SUM(total_amount), 0)::numeric(12,2) FROM orders) AS gross_merchandise_value`
+         (SELECT COALESCE(SUM(total_amount), 0)::numeric(12,2) FROM orders) AS gross_merchandise_value,
+         (SELECT COALESCE(SUM(platform_profit), 0)::numeric(12,2) FROM order_items) AS total_platform_profit`
     ),
     pool.query(
       `SELECT
@@ -691,10 +692,21 @@ const getTopProductsData = async () => {
   return result.rows;
 };
 
+const getOrderFulfillmentData = async () => {
+  const result = await pool.query(
+    `SELECT status, COUNT(*)::int as count
+     FROM orders
+     GROUP BY status
+     ORDER BY count DESC`
+  );
+  return result.rows;
+};
+
 module.exports = {
   listPendingSellers,
   verifySellerId,
   getAdminOverviewData,
+  getOrderFulfillmentData,
   getSellerPerformanceData,
   getCategoryPerformanceData,
   getDemandOpportunitiesData,
