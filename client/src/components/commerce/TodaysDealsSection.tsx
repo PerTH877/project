@@ -115,22 +115,27 @@ export function TodaysDealsSection() {
   const stockColor = stockCount < 10 ? 'text-rose-500 font-bold' : 'text-orange-400';
 
   return (
-    <div>
-      <div className="mb-5 flex items-center justify-between">
+    <div className="relative pt-6">
+      {/* Decorative Neon Header Strip */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_12px_rgba(0,255,255,0.8)]" />
+      
+      <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="absolute inset-0 rounded-full bg-amber-400/30 blur-md animate-pulse" />
-            <Zap className="relative h-6 w-6 text-amber-400" />
+            <div className="absolute inset-0 rounded-full bg-cyan-400/20 blur-md animate-pulse" />
+            <Zap className="relative h-6 w-6 text-cyan-400" />
           </div>
           <div>
-            <h2 className="text-2xl font-black tracking-tight text-white"
-              style={{ textShadow: '0 0 20px rgba(105,246,255,0.4), 0 0 40px rgba(105,246,255,0.15)' }}
+            <h2 className="text-3xl font-black tracking-tighter"
+              style={{ 
+                textShadow: '0 0 30px rgba(34,211,238,0.4), 0 0 60px rgba(236,72,153,0.3)',
+                backgroundImage: 'linear-gradient(135deg, #22d3ee 0%, #a855f7 50%, #ec4899 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
             >
               Today&apos;s Lightning Deals
             </h2>
-            <p className="text-xs font-semibold uppercase tracking-widest text-amber-400/80 mt-0.5">
-              ⚡ Limited time · Auto-rotating every 6s
-            </p>
           </div>
         </div>
         <Link
@@ -142,7 +147,25 @@ export function TodaysDealsSection() {
         </Link>
       </div>
 
-      <div className="deals-carousel relative overflow-hidden p-5 sm:p-6">
+      <div className="deals-carousel relative overflow-hidden p-5 sm:p-6"
+        style={{
+          background: `
+            linear-gradient(135deg, rgba(11, 15, 36, 0.98), rgba(5, 7, 14, 1)),
+            radial-gradient(circle at 15% 15%, rgba(34, 211, 238, 0.12) 0%, transparent 35%),
+            radial-gradient(circle at 85% 20%, rgba(168, 85, 247, 0.12) 0%, transparent 35%),
+            radial-gradient(circle at 50% 85%, rgba(236, 72, 153, 0.1) 0%, transparent 35%),
+            radial-gradient(circle at 75% 75%, rgba(34, 211, 238, 0.06) 0%, transparent 30%),
+            repeating-linear-gradient(45deg, rgba(34, 211, 238, 0.02) 0px, rgba(34, 211, 238, 0.02) 1px, transparent 1px, transparent 12px)
+          `,
+          backdropFilter: 'blur(16px)',
+          boxShadow: `
+            0 40px 120px -40px rgba(0, 0, 0, 1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.08),
+            inset 0 0 60px rgba(0, 0, 0, 0.6)
+          `,
+          border: '1.5px solid rgba(34, 211, 238, 0.45)',
+        }}
+      >
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="flex flex-col justify-between lg:col-span-1">
             <Link
@@ -248,11 +271,14 @@ export function TodaysDealsSection() {
               className={cn(
                 "deal-card group relative cursor-pointer overflow-hidden rounded-xl border p-3 transition-all duration-300 block",
                 activeIndex === idx
-                  ? "border-cyan-400 shadow-[0_0_20px_rgba(0,255,255,0.35)]"
+                  ? "border-cyan-400 shadow-[0_0_25px_rgba(0,255,255,0.4)]"
                   : "border-white/10 hover:border-cyan-400/60"
               )}
+              style={{
+                background: activeIndex === idx ? 'linear-gradient(180deg, #0e1224, #080a15)' : '#070912',
+              }}
             >
-              <div className={cn("absolute inset-0 opacity-40 transition duration-300 group-hover:opacity-60 bg-gradient-to-br", gradient.from, gradient.to)} />
+              <div className={cn("absolute inset-0 opacity-30 transition duration-300 group-hover:opacity-50 bg-gradient-to-br", gradient.from, gradient.to)} />
               <div className="relative z-10">
                 <div className="relative mb-2 aspect-square overflow-hidden rounded-lg border border-white/10">
                   <SmartImage

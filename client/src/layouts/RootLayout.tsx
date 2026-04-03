@@ -8,22 +8,27 @@ export default function RootLayout() {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen text-foreground selection:bg-cyan-500/30 selection:text-white">
+      {/* Global Background Layer */}
+      <div className="fixed inset-0 -z-20 bg-[#07090d]" />
+      
+      {/* Aurora Background Blobs */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute left-[-2%] top-[6%] h-[16rem] w-[16rem] rounded-full blur-[50px]" style={{ background: 'radial-gradient(circle, rgba(0,255,255,0.15) 0%, transparent 70%)' }} />
-        <div className="absolute right-[-2%] top-[12%] h-[20rem] w-[20rem] rounded-full blur-[60px]" style={{ background: 'radial-gradient(circle, rgba(255,88,214,0.1) 0%, transparent 70%)' }} />
-        <div className="absolute bottom-[-6%] left-[22%] h-[18rem] w-[18rem] rounded-full blur-[50px]" style={{ background: 'radial-gradient(circle, rgba(118,82,255,0.08) 0%, transparent 70%)' }} />
-        <div className="absolute top-[45%] right-[20%] h-[12rem] w-[12rem] rounded-full blur-[40px]" style={{ background: 'radial-gradient(circle, rgba(0,255,255,0.05) 0%, transparent 70%)' }} />
+        <div className="absolute -top-24 -left-24 w-[600px] h-[600px] bg-fuchsia-600/20 blur-[120px] rounded-full" />
+        <div className="absolute -bottom-32 -right-32 w-[700px] h-[700px] bg-cyan-500/20 blur-[120px] rounded-full" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-500/15 blur-[100px] rounded-full" />
       </div>
 
-      <Navbar />
-      <ScrollToTop />
+      <div className="relative z-0 flex flex-col min-h-screen">
+        <Navbar />
+        <ScrollToTop />
 
-      <main key={location.pathname} className="page-enter min-h-[calc(100vh-360px)]">
-        <Outlet />
-      </main>
+        <main key={location.pathname} className="flex-1 page-enter min-h-[calc(100vh-360px)]">
+          <Outlet />
+        </main>
 
-      <Footer />
+        <Footer />
+      </div>
 
       <Toaster position="top-right" richColors closeButton theme="dark" />
     </div>

@@ -814,6 +814,16 @@ async function seedUsers() {
     console.log('\n[6/9] Seeding Users (buyers)…');
 
     const HASH = await bcrypt.hash('buyer123', 10);
+    const SPECIAL_HASH = await bcrypt.hash('pass', 10);
+
+    // Create the specifically requested user
+    const specialUser = await insertReturningId(
+        `INSERT INTO Users (full_name, email, password_hash, phone_number)
+         VALUES ($1,$2,$3,$4)`,
+        ['User P', 'p@gmail.com', SPECIAL_HASH, '+8801000000000']
+    );
+    log(`User: User P (p@gmail.com) [NO_ACTIVITY_USER] (id=${specialUser.user_id})`);
+
     const users = [
         { full_name: 'Amin Rahman', email: 'amin.rahman@demo.paruvo.com', phone: '+8801711000001' },
         { full_name: 'Nusrat Jahan', email: 'nusrat.jahan@demo.paruvo.com', phone: '+8801711000002' },
@@ -838,6 +848,7 @@ async function seedUsers() {
         log(`User: ${u.full_name}  (id=${user.user_id})`);
     }
 
+    // We return ONLY the random user IDs so that 'p@gmail.com' stays with 0 activity
     return userIds;
 }
 
@@ -1002,26 +1013,26 @@ async function seedFlashDealsBase() {
 
 async function cleanup() {
     console.log('\n[0/12] Cleaning up old demo data...');
-    await query('DELETE FROM Product_Answers');
-    await query('DELETE FROM Product_Questions');
-    await query('DELETE FROM Reviews');
-    await query('DELETE FROM Browsing_History');
-    await query('DELETE FROM Order_Items');
-    await query('DELETE FROM Orders');
-    await query('DELETE FROM order_audit');
-    await query('DELETE FROM Addresses');
-    await query('DELETE FROM Users');
-    await query('DELETE FROM Flash_Deals');
-    await query('DELETE FROM Inventory');
-    await query('DELETE FROM Product_Specifications');
-    await query('DELETE FROM Product_Media');
-    await query('DELETE FROM Product_Variants');
-    await query('DELETE FROM Products');
-    await query('DELETE FROM Sellers');
-    await query('DELETE FROM Category_Fees');
-    await query('DELETE FROM Categories');
-    await query('DELETE FROM Warehouses');
-    log('Previous demo data cleared.');
+    await query('TRUNCATE TABLE Product_Answers RESTART IDENTITY CASCADE');
+    await query('TRUNCATE TABLE Product_Questions RESTART IDENTITY CASCADE');
+    await query('TRUNCATE TABLE Reviews RESTART IDENTITY CASCADE');
+    await query('TRUNCATE TABLE Browsing_History RESTART IDENTITY CASCADE');
+    await query('TRUNCATE TABLE Order_Items RESTART IDENTITY CASCADE');
+    await query('TRUNCATE TABLE Orders RESTART IDENTITY CASCADE');
+    await query('TRUNCATE TABLE order_audit RESTART IDENTITY CASCADE');
+    await query('TRUNCATE TABLE Addresses RESTART IDENTITY CASCADE');
+    await query('TRUNCATE TABLE Users RESTART IDENTITY CASCADE');
+    await query('TRUNCATE TABLE Flash_Deals RESTART IDENTITY CASCADE');
+    await query('TRUNCATE TABLE Inventory RESTART IDENTITY CASCADE');
+    await query('TRUNCATE TABLE Product_Specifications RESTART IDENTITY CASCADE');
+    await query('TRUNCATE TABLE Product_Media RESTART IDENTITY CASCADE');
+    await query('TRUNCATE TABLE Product_Variants RESTART IDENTITY CASCADE');
+    await query('TRUNCATE TABLE Products RESTART IDENTITY CASCADE');
+    await query('TRUNCATE TABLE Sellers RESTART IDENTITY CASCADE');
+    await query('TRUNCATE TABLE Category_Fees RESTART IDENTITY CASCADE');
+    await query('TRUNCATE TABLE Categories RESTART IDENTITY CASCADE');
+    await query('TRUNCATE TABLE Warehouses RESTART IDENTITY CASCADE');
+    log('Previous demo data cleared and ID sequences reset.');
 }
 
 async function seedProducts(catMap, sellerMap, warehouseIds) {

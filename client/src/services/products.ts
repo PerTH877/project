@@ -99,9 +99,17 @@ export const productsService = {
 
   submitReview: async (
     productId: number,
-    payload: { rating: number; comment?: string; images?: string[] }
+    payload: { rating: number; comment?: string; images?: File[] }
   ) => {
-    const res = await api.post(`/products/${productId}/reviews`, payload);
+    const form = new FormData();
+    form.append("rating", String(payload.rating));
+    if (payload.comment) form.append("comment", payload.comment);
+    if (payload.images && payload.images.length > 0) {
+      payload.images.forEach((file) => form.append("images", file));
+    }
+    const res = await api.post(`/products/${productId}/reviews`, form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return res.data;
   },
 

@@ -170,12 +170,7 @@ export default function AdminDashboardPage() {
     };
 
     return (
-        <PageShell className="space-y-10 bg-slate-950 min-h-screen relative overflow-hidden pb-20">
-            {/* Aurora Background Blobs */}
-            <div className="fixed -top-20 -left-20 w-[600px] h-[600px] bg-fuchsia-600/30 blur-[130px] rounded-full pointer-events-none z-0" />
-            <div className="fixed -bottom-32 -right-32 w-[700px] h-[700px] bg-cyan-500/30 blur-[130px] rounded-full pointer-events-none z-0" />
-            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/20 blur-[110px] rounded-full pointer-events-none z-0" />
-            
+        <PageShell className="space-y-10 relative z-10 pb-20 min-h-screen">
             <div className="relative z-10 px-4">
                 <PageHeader
                     eyebrow="Market Intelligence"

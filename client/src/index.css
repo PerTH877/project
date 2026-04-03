@@ -45,12 +45,7 @@
   body {
     @apply min-h-screen bg-background text-foreground antialiased;
     font-family: "Manrope", "Segoe UI", sans-serif;
-    background:
-      radial-gradient(ellipse at 10% 10%, hsl(var(--accent-cyan) / 0.16), transparent 30%),
-      radial-gradient(ellipse at 90% 5%, hsl(var(--accent-magenta) / 0.12), transparent 28%),
-      radial-gradient(ellipse at 50% 95%, hsl(var(--accent-violet) / 0.1), transparent 30%),
-      radial-gradient(ellipse at 80% 60%, hsl(var(--accent-cyan) / 0.05), transparent 25%),
-      linear-gradient(180deg, rgba(7, 9, 13, 0.99), rgba(9, 11, 17, 0.99) 54%, rgba(6, 8, 12, 1));
+    background: linear-gradient(180deg, rgba(7, 9, 13, 1), rgba(9, 11, 17, 1) 54%, rgba(6, 8, 12, 1));
   }
 
   /* Global cyberpunk grid overlay */

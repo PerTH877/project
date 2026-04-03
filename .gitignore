@@ -33,3 +33,6 @@ Thumbs.db
 # --- Database / Temporary ---
 *.sqlite
 check_db.js
+
+# --- User Uploads ---
+server/uploads/

@@ -68,7 +68,7 @@ export default function HomePage() {
   const currentHero = heroSlides[currentHeroIndex];
 
   return (
-    <main className="pb-16 bg-background relative overflow-hidden">
+    <main className="pb-16 relative overflow-hidden">
       
       {/* 1. Cyberpunk Hero Banner Carousel */}
       <section className="shell-width mt-6 mb-8 relative group">
