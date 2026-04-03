@@ -358,6 +358,68 @@ const getRecentlyViewedProducts = async (pool) => {
   return result.rows;
 };
 
+const getUserBrowsingHistory = async (pool, userId) => {
+  const result = await pool.query(
+    `SELECT DISTINCT ON (bh.product_id)
+       p.product_id,
+       p.seller_id,
+       s.company_name AS seller_name,
+       s.is_verified AS seller_verified,
+       p.category_id,
+       c.name AS category_name,
+       p.title,
+       p.brand,
+       p.description,
+       p.base_price,
+       p.created_at,
+       p.is_active,
+       media.media_url AS primary_image,
+       (p.base_price + COALESCE(price_bounds.min_adjustment, 0)) AS lowest_price,
+       (p.base_price + COALESCE(price_bounds.max_adjustment, 0)) AS highest_price,
+       reviews_summary.avg_rating,
+       reviews_summary.review_count,
+       stock_summary.total_stock,
+       bh.viewed_at
+     FROM browsing_history bh
+     JOIN products p ON p.product_id = bh.product_id AND p.is_active = TRUE
+     JOIN sellers s ON s.seller_id = p.seller_id
+     LEFT JOIN categories c ON c.category_id = p.category_id
+     LEFT JOIN LATERAL (
+       SELECT media_url
+       FROM product_media
+       WHERE product_id = p.product_id AND media_type = 'image'
+       ORDER BY is_primary DESC, display_order ASC, media_id ASC
+       LIMIT 1
+     ) media ON TRUE
+     LEFT JOIN LATERAL (
+       SELECT
+         MIN(COALESCE(price_adjustment, 0)) AS min_adjustment,
+         MAX(COALESCE(price_adjustment, 0)) AS max_adjustment
+       FROM product_variants
+       WHERE product_id = p.product_id AND is_active = TRUE
+     ) price_bounds ON TRUE
+     LEFT JOIN LATERAL (
+       SELECT
+         COALESCE(AVG(r.rating)::numeric(10,2), 0) AS avg_rating,
+         COUNT(*)::int AS review_count
+       FROM reviews r
+       WHERE r.product_id = p.product_id
+     ) reviews_summary ON TRUE
+     LEFT JOIN LATERAL (
+       SELECT COALESCE(SUM(i.stock_quantity), 0)::int AS total_stock
+       FROM product_variants pv
+       LEFT JOIN inventory i ON i.variant_id = pv.variant_id
+       WHERE pv.product_id = p.product_id AND pv.is_active = TRUE
+     ) stock_summary ON TRUE
+     WHERE bh.user_id = $1
+     ORDER BY bh.product_id, bh.viewed_at DESC
+     LIMIT 10`,
+    [userId]
+  );
+  // Re-sort by viewed_at since DISTINCT ON requires sorting by the distinct column first
+  return result.rows.sort((a, b) => new Date(b.viewed_at) - new Date(a.viewed_at));
+};
+
 const getCategoriesWithSampleMedia = async (pool) => {
   const result = await pool.query(
     `SELECT
@@ -573,6 +635,7 @@ module.exports = {
   insertAnswer,
   getFastDispatchProducts,
   getRecentlyViewedProducts,
+  getUserBrowsingHistory,
   getCategoriesWithSampleMedia,
   getSpotlightSellers,
   getMarketplaceMetrics,

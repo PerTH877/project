@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { Clock } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
@@ -11,7 +12,11 @@ interface RecentlyViewedProps {
 }
 
 export function RecentlyViewed({ excludeId }: RecentlyViewedProps) {
-  const { productIds } = useHistoryStore();
+  const { productIds, initializeHistory } = useHistoryStore();
+
+  useEffect(() => {
+    initializeHistory();
+  }, [initializeHistory]);
 
   // Filter out the current product and take the most recent 8
   const idsToShow = productIds
@@ -32,7 +37,7 @@ export function RecentlyViewed({ excludeId }: RecentlyViewedProps) {
     .filter((q) => q.isSuccess && q.data)
     .map((q) => q.data!.product);
 
-  if (idsToShow.length === 0) return null;
+  if (!isLoading && idsToShow.length === 0) return null;
 
   return (
     <section className="mt-12">
@@ -41,8 +46,8 @@ export function RecentlyViewed({ excludeId }: RecentlyViewedProps) {
           <Clock className="h-4 w-4 text-cyan-400" />
         </div>
         <div>
-          <p className="hud-kicker">Recently Viewed</p>
-          <h2 className="display-font mt-1 text-2xl text-white">
+          <p className="hud-kicker tracking-widest">Recently Viewed</p>
+          <h2 className="display-font mt-1 text-2xl text-white tracking-wide">
             Continue where you left off
           </h2>
         </div>
@@ -50,8 +55,18 @@ export function RecentlyViewed({ excludeId }: RecentlyViewedProps) {
 
       {isLoading ? (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: Math.min(4, idsToShow.length) }).map((_, i) => (
-            <Skeleton key={i} className="h-[280px] rounded-[24px]" />
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex flex-col gap-3 p-4 rounded-[24px] border border-white/10 bg-white/[0.03]">
+              <Skeleton className="aspect-[16/8.7] w-full rounded-xl bg-white/5" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-3/4 bg-white/5" />
+                <Skeleton className="h-3 w-1/2 bg-white/5" />
+                <div className="flex gap-2 pt-2">
+                  <Skeleton className="h-6 w-20 bg-white/5" />
+                  <Skeleton className="h-6 w-16 bg-white/5" />
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       ) : products.length > 0 ? (

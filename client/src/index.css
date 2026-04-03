@@ -861,6 +861,41 @@
   }
 }
 
+@layer utilities {
+  .text-neon-cyan {
+    background: linear-gradient(90deg, #22d3ee, #06b6d4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.3));
+  }
+
+  .text-neon-emerald {
+    background: linear-gradient(90deg, #34d399, #10b981);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 8px rgba(52, 211, 153, 0.3));
+  }
+
+  .text-neon-amber {
+    background: linear-gradient(90deg, #fbbf24, #f59e0b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.3));
+  }
+
+  .text-neon-magenta {
+    background: linear-gradient(90deg, #ff40c9, #db2777);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 8px rgba(255, 64, 201, 0.3));
+  }
+
+  .section-kicker {
+    @apply text-[10px] font-black uppercase tracking-[0.4em] opacity-40 mb-1 block font-mono;
+  }
+}
+
+
 /* ---------- KEYFRAMES ---------- */
 
 @keyframes shimmer {

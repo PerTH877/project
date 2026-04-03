@@ -89,7 +89,7 @@ export default function ProductDetailPage() {
     return <main className="flex items-center justify-center min-h-[50vh]"><p className="neon-text-magenta text-xl font-mono">Entity not found in current subnet.</p></main>;
   }
 
-  const { product, media = [], specifications = [], variants = [], related_products = [] } = productQuery.data;
+  const { product, media = [], specifications = [], variants = [], related_products = [], reviews = [], questions = [] } = productQuery.data;
   const primaryMedia = media.find((m) => m.is_primary)?.media_url || media[0]?.media_url;
   const allImages = Array.from(
     new Set([product.primary_image, primaryMedia, ...media.map((m) => m.media_url)].filter(Boolean))
@@ -217,15 +217,27 @@ export default function ProductDetailPage() {
           ) : null}
 
           <div className="space-y-4 border-b border-white/10 pb-6">
-            <h3 className="text-sm font-bold text-white uppercase tracking-widest font-mono">Overview</h3>
+            <div>
+              <span className="section-kicker">SYSTEM_OVERVIEW</span>
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-cyan-400" />
+                <h3 className="text-sm font-bold uppercase tracking-[0.2em] font-mono text-neon-cyan">Overview</h3>
+              </div>
+            </div>
             <p className="text-sm text-slate-300 leading-relaxed max-w-prose">
               {product.description}
             </p>
           </div>
 
           {specifications.length > 0 ? (
-            <div className="mt-6 space-y-4">
-              <h3 className="text-sm font-bold text-white uppercase tracking-widest font-mono">Specifications</h3>
+            <div className="mt-10 space-y-4">
+              <div>
+                <span className="section-kicker">TECHNICAL_SPECS</span>
+                <div className="flex items-center gap-2">
+                  <Terminal className="w-4 h-4 text-emerald-400" />
+                  <h3 className="text-sm font-bold uppercase tracking-[0.2em] font-mono text-neon-emerald">Specifications</h3>
+                </div>
+              </div>
               <div className="grid gap-3">
                 {specifications.map((spec) => (
                   <div key={spec.spec_id} className="grid grid-cols-[140px_minmax(0,1fr)] gap-3 rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3 text-sm">
@@ -236,6 +248,84 @@ export default function ProductDetailPage() {
               </div>
             </div>
           ) : null}
+
+          {/* Reviews Section */}
+          <div className="mt-16 space-y-6">
+            <div className="border-b border-white/10 pb-4">
+              <span className="section-kicker">FIELD_REPORTS</span>
+              <div className="flex items-center gap-2">
+                <Star className="w-4 h-4 text-amber-400" />
+                <h2 className="text-sm font-bold uppercase tracking-[0.2em] font-mono text-neon-amber">Customer Reviews</h2>
+              </div>
+            </div>
+            <div className="space-y-4">
+              {reviews.map((review: any, idx: number) => (
+                <div key={review.review_id || idx} className="p-4 rounded-xl border border-white/10 bg-white/[0.03] space-y-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-cyan-400 font-bold font-mono text-sm">{review.user_name}</p>
+                      <div className="flex text-amber-400 mt-1">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star key={i} className={`w-3 h-3 ${i < review.rating ? "fill-current" : "text-white/10"}`} />
+                        ))}
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-500 font-mono">
+                      {review.created_at ? new Date(review.created_at).toLocaleDateString() : "RECENT"}
+                    </span>
+                  </div>
+                  <p className="text-slate-300 text-sm leading-relaxed">{review.comment}</p>
+                </div>
+              ))}
+              {reviews.length === 0 && (
+                <p className="text-sm text-slate-500 font-mono italic">No field reports submitted for this unit.</p>
+              )}
+            </div>
+          </div>
+
+          {/* Q&A Section */}
+          <div className="mt-16 space-y-6">
+            <div className="border-b border-white/10 pb-4">
+              <span className="section-kicker">SECTOR_QUERIES</span>
+              <div className="flex items-center gap-2">
+                <Terminal className="w-4 h-4 text-magenta-400" />
+                <h2 className="text-sm font-bold uppercase tracking-[0.2em] font-mono text-neon-magenta">Field Queries (Q&A)</h2>
+              </div>
+            </div>
+            <div className="space-y-4">
+              {questions.map((q: any, idx: number) => (
+                <div key={q.question_id || idx} className="p-4 rounded-xl border border-white/10 bg-white/[0.03] space-y-3">
+                  <p className="text-white font-mono text-sm">
+                    <span className="text-magenta-400 mr-2 font-bold">Q:</span>
+                    {q.question_text}
+                  </p>
+                  <div className="ml-6 space-y-4 border-l border-white/5 pl-4">
+                    {q.answers && q.answers.length > 0 ? (
+                      q.answers.map((ans: any, aIdx: number) => (
+                        <div key={ans.answer_id || aIdx}>
+                          <p className="text-slate-300 text-sm font-mono">
+                            <span className="text-cyan-400 mr-2 font-bold">A:</span>
+                            {ans.answer_text}
+                          </p>
+                          <p className="text-[10px] text-slate-500 font-mono mt-1">
+                            Seller Response • {ans.created_at ? new Date(ans.created_at).toLocaleDateString() : "RECENT"}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-slate-500 font-mono italic">
+                        <span className="text-cyan-400 mr-2 font-bold">A:</span>
+                        Awaiting response from seller...
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {questions.length === 0 && (
+                <p className="text-sm text-slate-500 font-mono italic">No active queries in this sector.</p>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="w-full lg:w-3/12">

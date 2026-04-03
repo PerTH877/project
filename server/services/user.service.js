@@ -1,6 +1,8 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const userRepository = require("../repositories/user.repository");
+const productRepository = require("../repositories/productRepository");
+const pool = require("../config/db");
 
 const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
 
@@ -141,9 +143,14 @@ const updateProfile = async (userId, data) => {
   return updated;
 };
 
+const getUserHistory = async (userId) => {
+  return productRepository.getUserBrowsingHistory(pool, userId);
+};
+
 module.exports = {
   registerUser,
   loginUser,
   getCurrentUser,
   updateProfile,
+  getUserHistory,
 };

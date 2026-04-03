@@ -309,6 +309,7 @@ const fetchProductDetail = async (db, productId, options = {}) => {
       p.base_price,
       p.created_at,
       p.is_active,
+      media.media_url AS primary_image,
       reviews_summary.avg_rating,
       reviews_summary.review_count,
       stock_summary.total_stock,
@@ -317,6 +318,13 @@ const fetchProductDetail = async (db, productId, options = {}) => {
     FROM products p
     JOIN sellers s ON s.seller_id = p.seller_id
     LEFT JOIN categories c ON c.category_id = p.category_id
+    LEFT JOIN LATERAL (
+      SELECT media_url
+      FROM product_media
+      WHERE product_id = p.product_id AND media_type = 'image'
+      ORDER BY is_primary DESC, display_order ASC, media_id ASC
+      LIMIT 1
+    ) media ON TRUE
     LEFT JOIN LATERAL (
       SELECT
         COALESCE(AVG(rating)::numeric(10,2), 0) AS avg_rating,

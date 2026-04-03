@@ -7,31 +7,31 @@ const pool = require("../config/db");
 
 
 const listPendingSellers = async () => {
-  const result = await pool.query(
-    `SELECT seller_id, company_name, contact_email, gst_number, is_verified
+    const result = await pool.query(
+        `SELECT seller_id, company_name, contact_email, gst_number, is_verified
      FROM Sellers
      WHERE is_verified = FALSE
      ORDER BY seller_id DESC`
-  );
-  return result.rows;
+    );
+    return result.rows;
 };
 
 const verifySellerId = async (client, sellerId) => {
-  const updated = await client.query(
-    `UPDATE Sellers
+    const updated = await client.query(
+        `UPDATE Sellers
      SET is_verified = TRUE
      WHERE seller_id = $1
      RETURNING seller_id, company_name, contact_email, is_verified`,
-    [sellerId]
-  );
-  return updated.rows;
+        [sellerId]
+    );
+    return updated.rows;
 };
 
 
 const getAdminOverviewData = async () => {
-  const [summaryResult, warehouseResult] = await Promise.all([
-    pool.query(
-      `SELECT
+    const [summaryResult, warehouseResult] = await Promise.all([
+        pool.query(
+            `SELECT
          (SELECT COUNT(*)::int FROM users) AS customer_count,
          (SELECT COUNT(*)::int FROM sellers WHERE is_verified = TRUE) AS verified_seller_count,
          (SELECT COUNT(*)::int FROM sellers WHERE is_verified = FALSE) AS pending_seller_count,
@@ -39,9 +39,9 @@ const getAdminOverviewData = async () => {
          (SELECT COUNT(*)::int FROM orders) AS order_count,
          (SELECT COALESCE(SUM(total_amount), 0)::numeric(12,2) FROM orders) AS gross_merchandise_value,
          (SELECT COALESCE(SUM(platform_profit), 0)::numeric(12,2) FROM order_items) AS total_platform_profit`
-    ),
-    pool.query(
-      `SELECT
+        ),
+        pool.query(
+            `SELECT
          w.warehouse_id,
          w.name,
          w.city,
@@ -52,19 +52,19 @@ const getAdminOverviewData = async () => {
        WHERE w.is_active = TRUE
        GROUP BY w.warehouse_id
        ORDER BY stock_units DESC, w.city ASC`
-    ),
-  ]);
+        ),
+    ]);
 
-  return {
-    summary: summaryResult.rows[0] || {},
-    warehouses: warehouseResult.rows,
-  };
+    return {
+        summary: summaryResult.rows[0] || {},
+        warehouses: warehouseResult.rows,
+    };
 };
 
 
 const getSellerPerformanceData = async () => {
-  const result = await pool.query(
-    `WITH seller_base AS (
+    const result = await pool.query(
+        `WITH seller_base AS (
        SELECT
          s.seller_id,
          s.company_name,
@@ -148,13 +148,13 @@ const getSellerPerformanceData = async () => {
      LEFT JOIN payouts p ON p.seller_id = sb.seller_id
      ORDER BY total_gmv DESC, growth_rate DESC, sb.company_name ASC
      LIMIT 12`
-  );
-  return result.rows;
+    );
+    return result.rows;
 };
 
 const getCategoryPerformanceData = async () => {
-  const result = await pool.query(
-    `WITH product_counts AS (
+    const result = await pool.query(
+        `WITH product_counts AS (
        SELECT
          category_id,
          COUNT(*) FILTER (WHERE is_active = TRUE)::int AS active_products
@@ -229,13 +229,13 @@ const getCategoryPerformanceData = async () => {
      LEFT JOIN stock st ON st.category_id = c.category_id
      ORDER BY gmv DESC, units_sold DESC, c.name ASC
      LIMIT 12`
-  );
-  return result.rows;
+    );
+    return result.rows;
 };
 
 const getDemandOpportunitiesData = async () => {
-  const result = await pool.query(
-    `WITH interest AS (
+    const result = await pool.query(
+        `WITH interest AS (
        SELECT
          p.product_id,
          p.title,
@@ -298,13 +298,13 @@ const getDemandOpportunitiesData = async () => {
      WHERE COALESCE(i.browse_count, 0) + COALESCE(i.cart_adds, 0) + COALESCE(i.wishlist_adds, 0) > 0
      ORDER BY opportunity_score DESC, i.browse_count DESC, i.title ASC
      LIMIT 12`
-  );
-  return result.rows;
+    );
+    return result.rows;
 };
 
 const getWarehousePressureData = async () => {
-  const result = await pool.query(
-    `WITH primary_warehouse AS (
+    const result = await pool.query(
+        `WITH primary_warehouse AS (
        SELECT DISTINCT ON (variant_id)
          variant_id,
          warehouse_id
@@ -356,13 +356,13 @@ const getWarehousePressureData = async () => {
      FROM inventory_summary i
      LEFT JOIN order_pressure o ON o.warehouse_id = i.warehouse_id
      ORDER BY pressure_score DESC, i.stock_units DESC, i.city ASC`
-  );
-  return result.rows;
+    );
+    return result.rows;
 };
 
 const getGeographicDemandData = async () => {
-  const result = await pool.query(
-    `WITH target_cities AS (
+    const result = await pool.query(
+        `WITH target_cities AS (
        SELECT DISTINCT city FROM warehouses WHERE is_active = TRUE
        UNION
        SELECT DISTINCT city FROM addresses
@@ -451,14 +451,14 @@ const getGeographicDemandData = async () => {
        ON rc.city = tc.city
       AND rc.rank_in_city = 1
      ORDER BY cs.gmv DESC, tc.city ASC`
-  );
-  return result.rows;
+    );
+    return result.rows;
 };
 
 const getReturnsRiskData = async () => {
-  const [sellerResult, productResult, categoryResult] = await Promise.all([
-    pool.query(
-      `SELECT
+    const [sellerResult, productResult, categoryResult] = await Promise.all([
+        pool.query(
+            `SELECT
          s.seller_id,
          s.company_name,
          COUNT(r.return_id)::int AS return_count,
@@ -478,9 +478,9 @@ const getReturnsRiskData = async () => {
        HAVING COUNT(r.return_id) > 0
        ORDER BY return_rate DESC, return_count DESC, s.company_name ASC
        LIMIT 10`
-    ),
-    pool.query(
-      `SELECT
+        ),
+        pool.query(
+            `SELECT
          p.product_id,
          p.title,
          COUNT(r.return_id)::int AS return_count,
@@ -499,9 +499,9 @@ const getReturnsRiskData = async () => {
        HAVING COUNT(r.return_id) > 0
        ORDER BY return_rate DESC, return_count DESC, p.title ASC
        LIMIT 10`
-    ),
-    pool.query(
-      `SELECT
+        ),
+        pool.query(
+            `SELECT
          c.category_id,
          c.name AS category_name,
          COUNT(r.return_id)::int AS return_count,
@@ -521,19 +521,19 @@ const getReturnsRiskData = async () => {
        HAVING COUNT(r.return_id) > 0
        ORDER BY return_rate DESC, return_count DESC, c.name ASC
        LIMIT 10`
-    ),
-  ]);
+        ),
+    ]);
 
-  return {
-    sellers: sellerResult.rows,
-    products: productResult.rows,
-    categories: categoryResult.rows,
-  };
+    return {
+        sellers: sellerResult.rows,
+        products: productResult.rows,
+        categories: categoryResult.rows,
+    };
 };
 
 const getInventoryRiskData = async () => {
-  const result = await pool.query(
-    `WITH stock AS (
+    const result = await pool.query(
+        `WITH stock AS (
        SELECT
          p.product_id,
          COALESCE(SUM(i.stock_quantity), 0)::int AS stock_units
@@ -598,13 +598,13 @@ const getInventoryRiskData = async () => {
      WHERE p.is_active = TRUE
      ORDER BY risk_score DESC, stock_gap DESC, p.title ASC
      LIMIT 12`
-  );
-  return result.rows;
+    );
+    return result.rows;
 };
 
 const getConversionSignalsData = async () => {
-  const result = await pool.query(
-    `WITH interest AS (
+    const result = await pool.query(
+        `WITH interest AS (
        SELECT
          p.product_id,
          COUNT(DISTINCT bh.history_id)::int AS browse_count,
@@ -660,25 +660,25 @@ const getConversionSignalsData = async () => {
        AND (COALESCE(i.browse_count, 0) > 0 OR COALESCE(i.cart_adds, 0) > 0 OR COALESCE(i.wishlist_adds, 0) > 0)
      ORDER BY conversion_gap_score DESC, browse_count DESC, p.title ASC
      LIMIT 12`
-  );
-  return result.rows;
+    );
+    return result.rows;
 };
 
 const getTopCategoriesData = async () => {
-  const result = await pool.query(
-    `SELECT c.category_id, c.name, COUNT(p.product_id) AS product_count
+    const result = await pool.query(
+        `SELECT c.category_id, c.name, COUNT(p.product_id) AS product_count
      FROM categories c
      LEFT JOIN products p ON p.category_id = c.category_id
      GROUP BY c.category_id, c.name
      ORDER BY product_count DESC, c.name ASC
      LIMIT 5`
-  );
-  return result.rows;
+    );
+    return result.rows;
 };
 
 const getTopSellersData = async () => {
-  const result = await pool.query(
-    `SELECT s.seller_id, s.company_name,
+    const result = await pool.query(
+        `SELECT s.seller_id, s.company_name,
             COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS total_sales
      FROM sellers s
      LEFT JOIN products p ON p.seller_id = s.seller_id
@@ -687,13 +687,13 @@ const getTopSellersData = async () => {
      GROUP BY s.seller_id, s.company_name
      ORDER BY total_sales DESC, s.company_name ASC
      LIMIT 5`
-  );
-  return result.rows;
+    );
+    return result.rows;
 };
 
 const getTopProductsData = async () => {
-  const result = await pool.query(
-    `SELECT p.product_id, p.title,
+    const result = await pool.query(
+        `SELECT p.product_id, p.title,
             COALESCE(SUM(CASE WHEN c.cart_id IS NOT NULL THEN 1 ELSE 0 END), 0)
             + COALESCE(SUM(CASE WHEN wi.item_id IS NOT NULL THEN 1 ELSE 0 END), 0)
             + COALESCE(COUNT(DISTINCT bh.history_id), 0) AS popularity
@@ -705,34 +705,34 @@ const getTopProductsData = async () => {
      GROUP BY p.product_id, p.title
      ORDER BY popularity DESC, p.title ASC
      LIMIT 5`
-  );
-  return result.rows;
+    );
+    return result.rows;
 };
 
 const getOrderFulfillmentData = async () => {
-  const result = await pool.query(
-    `SELECT status, COUNT(*)::int as count
+    const result = await pool.query(
+        `SELECT status, COUNT(*)::int as count
      FROM orders
      GROUP BY status
      ORDER BY count DESC`
-  );
-  return result.rows;
+    );
+    return result.rows;
 };
 
 module.exports = {
-  listPendingSellers,
-  verifySellerId,
-  getAdminOverviewData,
-  getOrderFulfillmentData,
-  getSellerPerformanceData,
-  getCategoryPerformanceData,
-  getDemandOpportunitiesData,
-  getWarehousePressureData,
-  getGeographicDemandData,
-  getReturnsRiskData,
-  getInventoryRiskData,
-  getConversionSignalsData,
-  getTopCategoriesData,
-  getTopSellersData,
-  getTopProductsData,
+    listPendingSellers,
+    verifySellerId,
+    getAdminOverviewData,
+    getOrderFulfillmentData,
+    getSellerPerformanceData,
+    getCategoryPerformanceData,
+    getDemandOpportunitiesData,
+    getWarehousePressureData,
+    getGeographicDemandData,
+    getReturnsRiskData,
+    getInventoryRiskData,
+    getConversionSignalsData,
+    getTopCategoriesData,
+    getTopSellersData,
+    getTopProductsData,
 };
