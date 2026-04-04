@@ -350,9 +350,6 @@ $$ LANGUAGE plpgsql;
 
 
 
--- ============================================================
--- SAFETY HELPER: returns FALSE when total stock is insufficient
--- ============================================================
 CREATE OR REPLACE FUNCTION fn_is_stock_available(
     p_variant_id INTEGER,
     p_quantity    INTEGER

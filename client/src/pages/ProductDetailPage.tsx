@@ -566,9 +566,9 @@ export default function ProductDetailPage() {
                                     <div>
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-black text-xs">
-                                                {review.user_name?.charAt(0) || "U"}
+                                                {review.user?.full_name?.charAt(0) || "U"}
                                             </div>
-                                            <p className="text-cyan-400 font-bold font-mono text-sm tracking-wide">{review.user_name}</p>
+                                            <p className="text-cyan-400 font-bold font-mono text-sm tracking-wide">{review.user?.full_name}</p>
                                         </div>
                                         <div className="flex text-amber-500 mt-3 gap-0.5">
                                             {Array.from({ length: 5 }).map((_, i) => (

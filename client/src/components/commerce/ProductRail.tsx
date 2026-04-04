@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ProductCard, type ProductCardDensity } from "@/components/ProductCard";
@@ -14,7 +15,7 @@ interface ProductRailProps {
   viewAllLabel?: string;
 }
 
-export function ProductRail({
+export const ProductRail = memo(function ProductRail({
   products,
   isLoading = false,
   density,
@@ -70,3 +71,4 @@ export function ProductRail({
     </div>
   );
 }
+);

@@ -107,25 +107,6 @@ const getCategoryPerformance = async (req, res) => {
   }
 };
 
-const getDemandOpportunities = async (req, res) => {
-  try {
-    const data = await adminService.formatDemandOpportunities();
-    return res.json(data);
-  } catch (err) {
-    console.error("getDemandOpportunities:", err.message);
-    return res.status(500).json({ error: "Server error" });
-  }
-};
-
-const getWarehousePressure = async (req, res) => {
-  try {
-    const data = await adminService.formatWarehousePressure();
-    return res.json(data);
-  } catch (err) {
-    console.error("getWarehousePressure:", err.message);
-    return res.status(500).json({ error: "Server error" });
-  }
-};
 
 const getGeographicDemand = async (req, res) => {
   try {
@@ -137,65 +118,6 @@ const getGeographicDemand = async (req, res) => {
   }
 };
 
-const getReturnsRisk = async (req, res) => {
-  try {
-    const data = await adminService.formatReturnsRisk();
-    return res.json(data);
-  } catch (err) {
-    console.error("getReturnsRisk:", err.message);
-    return res.status(500).json({ error: "Server error" });
-  }
-};
-
-const getInventoryRisk = async (req, res) => {
-  try {
-    const data = await adminService.formatInventoryRisk();
-    return res.json(data);
-  } catch (err) {
-    console.error("getInventoryRisk:", err.message);
-    return res.status(500).json({ error: "Server error" });
-  }
-};
-
-const getConversionSignals = async (req, res) => {
-  try {
-    const data = await adminService.formatConversionSignals();
-    return res.json(data);
-  } catch (err) {
-    console.error("getConversionSignals:", err.message);
-    return res.status(500).json({ error: "Server error" });
-  }
-};
-
-const getTopCategories = async (req, res) => {
-  try {
-    const data = await adminService.formatTopCategories();
-    return res.json(data);
-  } catch (err) {
-    console.error("getTopCategories:", err.message);
-    return res.status(500).json({ error: "Server error" });
-  }
-};
-
-const getTopSellers = async (req, res) => {
-  try {
-    const data = await adminService.formatTopSellers();
-    return res.json(data);
-  } catch (err) {
-    console.error("getTopSellers:", err.message);
-    return res.status(500).json({ error: "Server error" });
-  }
-};
-
-const getTopProducts = async (req, res) => {
-  try {
-    const data = await adminService.formatTopProducts();
-    return res.json(data);
-  } catch (err) {
-    console.error("getTopProducts:", err.message);
-    return res.status(500).json({ error: "Server error" });
-  }
-};
 
 const getOrderFulfillment = async (req, res) => {
   try {
@@ -213,16 +135,8 @@ module.exports = {
   getAdminOverview,
   getSellerPerformance,
   getCategoryPerformance,
-  getDemandOpportunities,
-  getWarehousePressure,
   getGeographicDemand,
-  getReturnsRisk,
-  getInventoryRisk,
-  getConversionSignals,
   listPendingSellers,
   verifySeller,
-  getTopCategories,
-  getTopSellers,
-  getTopProducts,
   getOrderFulfillment,
 };

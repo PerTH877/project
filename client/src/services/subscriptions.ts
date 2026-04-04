@@ -22,7 +22,6 @@ export interface ActiveSubscription {
 
 export const subscriptionsService = {
   getPlans: async (): Promise<SubscriptionPlan[]> => {
-    // Some setups include /api in baseURL, some don't. Using /subscriptions based on other services.
     const res = await api.get("/subscriptions/plans");
     return res.data.plans || res.data;
   },

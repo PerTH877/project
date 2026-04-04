@@ -48,7 +48,7 @@ export default function AdminLoginPage() {
     <AuthShell
       badge="Admin sign in"
       title="Review the marketplace with full operational context."
-      description="Seller performance, demand gaps, warehouse pressure, and return risk all start from the admin console."
+      description="Real-time monitoring of marketplace velocity, vendor performance, and category health starts here."
       asideTitle="Restricted access"
       asideDescription="This portal is for marketplace operations only. Customer and seller actions remain separated from admin access."
       asidePoints={["Marketplace health", "Seller moderation", "Risk tracking"]}

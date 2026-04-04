@@ -42,16 +42,5 @@ const updateProfile = async (req, res, next) => {
   }
 };
 
-const getUserHistory = async (req, res, next) => {
-  const userId = req.user?.user_id;
-  if (!userId) return res.status(401).json({ error: "Unauthorized" });
+module.exports = { registerUser, loginUser, getCurrentUser, updateProfile };
 
-  try {
-    const history = await userService.getUserHistory(userId);
-    return res.json({ history });
-  } catch (err) {
-    return next(err);
-  }
-};
-
-module.exports = { registerUser, loginUser, getCurrentUser, updateProfile, getUserHistory };

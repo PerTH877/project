@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { productsService } from "@/services/products";
@@ -9,25 +9,18 @@ import { TodaysDealsSection } from "@/components/commerce/TodaysDealsSection";
 
 export default function HomePage() {
   const { token } = useAuthStore();
-  const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
-  
-  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
 
-  useEffect(() => {
-    const fetchRealData = async () => {
-      try {
-        const featuredRes = await productsService.getFeaturedProducts();
-        setFeaturedProducts(Array.isArray(featuredRes) ? featuredRes : featuredRes?.data || []);
-      } catch (err) {
-        console.error("Failed to fetch featured products", err);
-      }
-    };
-    fetchRealData();
-  }, []);
+  const featuredQuery = useQuery({
+    queryKey: ["featured-products"],
+    queryFn: productsService.getFeaturedProducts,
+    staleTime: 5 * 60 * 1000,
+    select: (data) => (Array.isArray(data) ? data : data?.data ?? []),
+  });
 
   const homeQuery = useQuery({
     queryKey: ["home-feed"],
     queryFn: productsService.home,
+    staleTime: 5 * 60 * 1000,
   });
 
   const {
@@ -37,6 +30,12 @@ export default function HomePage() {
     trending_products = []
   } = homeQuery.data || {};
 
+  const featuredProducts = useMemo(
+    () => featuredQuery.data ?? [],
+    [featuredQuery.data]
+  );
+
+  const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
   const heroSlides = hero_products?.slice(0, 5) || [];
 
   useEffect(() => {
@@ -46,6 +45,7 @@ export default function HomePage() {
     }, 5000);
     return () => clearInterval(interval);
   }, [heroSlides.length]);
+
 
   if (homeQuery.isLoading) {
     return (

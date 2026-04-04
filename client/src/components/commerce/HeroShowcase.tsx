@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Cpu, Star, Store, Truck, Zap } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -21,7 +21,7 @@ function CornerBrackets({ emptyState = false }: { emptyState?: boolean }) {
   );
 }
 
-export function HeroShowcase({ featuredProducts = [] }: HeroShowcaseProps) {
+export const HeroShowcase = memo(function HeroShowcase({ featuredProducts = [] }: HeroShowcaseProps) {
   const allProducts = Array.isArray(featuredProducts) ? featuredProducts : [];
 
   const [activeIndex, setActiveIndex] = useState(0);
@@ -242,3 +242,4 @@ export function HeroShowcase({ featuredProducts = [] }: HeroShowcaseProps) {
     </div>
   );
 }
+);
