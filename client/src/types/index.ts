@@ -182,7 +182,6 @@ export interface HomeFeed {
   trending_products: ProductCard[];
   new_arrivals: ProductCard[];
   deal_products: ProductCard[];
-  fast_dispatch_products: ProductCard[];
   top_rated_products: ProductCard[];
   recently_viewed_products: ProductCard[];
   categories: Array<Category & { sample_image?: string | null }>;

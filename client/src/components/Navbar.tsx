@@ -50,7 +50,7 @@ export function Navbar() {
 
   return (
     <header className="w-full">
-      <div className="sticky top-0 z-[100] border-b border-cyan-500/30 bg-[#050810]/95 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,255,255,0.1)]">
+      <div className="sticky top-0 z-[100] border-b border-cyan-500/30 bg-[#050810] shadow-[0_4px_30px_rgba(0,255,255,0.1)]">
       {/* Top Nav Array - Amazon Style Header */}
       <div className="flex h-16 items-center flex-wrap px-4 gap-4 max-w-[1600px] mx-auto">
         

@@ -12,18 +12,15 @@ export default function RootLayout() {
       {/* Global Background Layer */}
       <div className="fixed inset-0 -z-20 bg-[#07090d]" />
       
-      {/* Aurora Background Blobs */}
-      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-24 -left-24 w-[600px] h-[600px] bg-fuchsia-600/20 blur-[120px] rounded-full" />
-        <div className="absolute -bottom-32 -right-32 w-[700px] h-[700px] bg-cyan-500/20 blur-[120px] rounded-full" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-500/15 blur-[100px] rounded-full" />
-      </div>
-
+      {/* Static Aurora Background */}
+      <div className="pointer-events-none fixed inset-0 -z-10" style={{
+        background: 'radial-gradient(circle at 10% -10%, rgba(192, 38, 211, 0.35) 0%, transparent 60%), radial-gradient(circle at 90% 110%, rgba(6, 182, 212, 0.4) 0%, transparent 65%), radial-gradient(circle at 60% 30%, rgba(139, 92, 246, 0.25) 0%, transparent 60%), radial-gradient(circle at 20% 70%, rgba(244, 63, 94, 0.2) 0%, transparent 55%)'
+      }} />
       <div className="relative z-0 flex flex-col min-h-screen">
         <Navbar />
         <ScrollToTop />
 
-        <main key={location.pathname} className="flex-1 page-enter min-h-[calc(100vh-360px)]">
+        <main className="flex-1 min-h-[calc(100vh-360px)]">
           <Outlet />
         </main>
 
