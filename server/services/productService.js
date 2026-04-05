@@ -254,7 +254,6 @@ const getHomeFeedData = async (pool) => {
         topRatedProducts,
         recentViewsRows,
         categoriesRows,
-        spotlightRows,
         metrics,
     ] = await Promise.all([
         fetchProductList(pool, { sort: "popular", page: 1, page_size: 8 }),
@@ -264,7 +263,6 @@ const getHomeFeedData = async (pool) => {
         fetchProductList(pool, { sort: "rating", page: 1, page_size: 8 }),
         repo.getRecentlyViewedProducts(pool),
         repo.getCategoriesWithSampleMedia(pool),
-        repo.getSpotlightSellers(pool),
         repo.getMarketplaceMetrics(pool),
     ]);
 
@@ -287,13 +285,6 @@ const getHomeFeedData = async (pool) => {
         top_rated_products: topRatedProducts.products,
         recently_viewed_products: recentViewsRows.map(mapHomeProductRow),
         categories: categoriesRows,
-        spotlight_sellers: spotlightRows.map((row) => ({
-            seller_id: row.seller_id,
-            company_name: row.company_name,
-            rating: Number(row.rating ?? 0),
-            active_products: Number(row.active_products ?? 0),
-            gross_sales: Number(row.gross_sales ?? 0),
-        })),
     };
 };
 

@@ -37,20 +37,6 @@ async function getCartItems(pool, userId) {
   };
 }
 
-async function getCartTotal(pool, userId) {
-  
-  let client;
-  try {
-    client = await pool.connect();
-    const total = await cartRepository.getCartTotal(client, userId);
-    return { total };
-  } finally {
-    if (client) {
-      client.release();
-    }
-  }
-}
-
 async function addToCart(pool, userId, variantId, quantity) {
   let client;
   
@@ -210,7 +196,6 @@ async function toggleSaveForLater(pool, userId, cartId, isSaved) {
 
 module.exports = {
   getCartItems,
-  getCartTotal,
   addToCart,
   updateCartItem,
   removeCartItem,

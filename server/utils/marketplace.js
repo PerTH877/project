@@ -133,6 +133,7 @@ const buildProductFilters = ({
   };
 };
 
+
 const baseProductSelect = `
   FROM products p
   JOIN sellers s ON s.seller_id = p.seller_id
@@ -192,6 +193,7 @@ const baseProductSelect = `
     )::int AS popularity_score
   ) engagement_summary ON TRUE
 `;
+
 
 const fetchProductList = async (db, query = {}, options = {}) => {
   const page = options.page ?? parsePagination(query).page;
@@ -289,6 +291,7 @@ const fetchProductList = async (db, query = {}, options = {}) => {
     },
   };
 };
+
 
 const fetchProductDetail = async (db, productId, options = {}) => {
   const includeInactive = options.includeInactive === true;

@@ -5,14 +5,10 @@ const {
   addToCart,
   updateCartItem,
   removeCartItem,
-  getCartTotal,
+
   toggleSaveForLater,
 } = require('../controllers/cartController');
 
-
-
-
-router.get('/total', authMiddleware, requireRole('user'), getCartTotal);
 
 
 

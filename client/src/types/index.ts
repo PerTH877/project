@@ -185,13 +185,6 @@ export interface HomeFeed {
   top_rated_products: ProductCard[];
   recently_viewed_products: ProductCard[];
   categories: Array<Category & { sample_image?: string | null }>;
-  spotlight_sellers: Array<{
-    seller_id: number;
-    company_name: string;
-    rating: number;
-    active_products: number;
-    gross_sales: number;
-  }>;
 }
 
 export interface Address {

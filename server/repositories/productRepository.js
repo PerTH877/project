@@ -356,9 +356,10 @@ const getUserBrowsingHistory = async (pool, userId) => {
      LIMIT 10`,
     [userId]
   );
-  // Re-sort by viewed_at since DISTINCT ON requires sorting by the distinct column first
   return result.rows.sort((a, b) => new Date(b.viewed_at) - new Date(a.viewed_at));
 };
+
+
 
 const getCategoriesWithSampleMedia = async (pool) => {
   const result = await pool.query(
@@ -395,25 +396,8 @@ const getCategoriesWithSampleMedia = async (pool) => {
   return result.rows;
 };
 
-const getSpotlightSellers = async (pool) => {
-  const result = await pool.query(
-    `SELECT
-       s.seller_id,
-       s.company_name,
-       s.rating,
-       COUNT(DISTINCT p.product_id)::int AS active_products,
-       COALESCE(SUM(oi.quantity * oi.unit_price), 0)::numeric(12,2) AS gross_sales
-     FROM sellers s
-     JOIN products p ON p.seller_id = s.seller_id AND p.is_active = TRUE
-     LEFT JOIN product_variants pv ON pv.product_id = p.product_id
-     LEFT JOIN order_items oi ON oi.variant_id = pv.variant_id
-     WHERE s.is_verified = TRUE
-     GROUP BY s.seller_id
-     ORDER BY gross_sales DESC, active_products DESC, s.company_name ASC
-     LIMIT 6`
-  );
-  return result.rows;
-};
+
+
 
 const getMarketplaceMetrics = async (pool) => {
   const result = await pool.query(
@@ -425,6 +409,8 @@ const getMarketplaceMetrics = async (pool) => {
   );
   return result.rows[0] || {};
 };
+
+
 
 const getFeaturedProducts = async (pool) => {
   const result = await pool.query(
@@ -483,6 +469,8 @@ const getFeaturedProducts = async (pool) => {
   );
   return result.rows;
 };
+
+
 
 const getActiveFlashDeals = async (pool) => {
   const result = await pool.query(
@@ -576,7 +564,6 @@ module.exports = {
   getRecentlyViewedProducts,
   getUserBrowsingHistory,
   getCategoriesWithSampleMedia,
-  getSpotlightSellers,
   getMarketplaceMetrics,
   getFeaturedProducts,
   getActiveFlashDeals,

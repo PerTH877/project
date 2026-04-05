@@ -301,6 +301,7 @@ CREATE TABLE IF NOT EXISTS order_audit (
 );
 
 
+
 CREATE OR REPLACE FUNCTION log_order_changes() RETURNS TRIGGER AS $$
 BEGIN
     IF TG_OP = 'INSERT' THEN
@@ -367,6 +368,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+
+
+
 CREATE OR REPLACE PROCEDURE proc_create_order(
     IN p_user_id INTEGER,
     IN p_address_id INTEGER,
@@ -378,7 +382,6 @@ DECLARE
     fee_percent DECIMAL(5,2);
     nearby_wh  INTEGER;
 BEGIN
-    -- Resolve user's nearest warehouse once
     SELECT nearby_warehouse_id INTO nearby_wh
     FROM Users WHERE user_id = p_user_id;
 
@@ -404,7 +407,6 @@ BEGIN
         LEFT JOIN category_fees cf ON cf.category_id = cat.category_id
         WHERE c.user_id = p_user_id AND c.is_saved = FALSE
     LOOP
-        -- Guard: abort if total stock across all warehouses is insufficient
         IF NOT fn_is_stock_available(cart_rec.variant_id, cart_rec.quantity) THEN
             RAISE EXCEPTION
                 'Insufficient stock for variant_id %. Requested: %, Available: %',
@@ -418,7 +420,6 @@ BEGIN
         INSERT INTO order_items (order_id, variant_id, quantity, unit_price, platform_fee_percent)
         VALUES (new_order_id, cart_rec.variant_id, cart_rec.quantity, cart_rec.unit_price, fee_percent);
 
-        -- Deduct stock ONLY from the user's nearby warehouse
         UPDATE Inventory
         SET stock_quantity = stock_quantity - cart_rec.quantity
         WHERE variant_id  = cart_rec.variant_id

@@ -7,11 +7,6 @@ export const cartService = {
     return res.data;
   },
 
-  getTotal: async (): Promise<number> => {
-    const res = await api.get("/cart/total");
-    return res.data.total;
-  },
-
   addItem: async (variant_id: number, quantity: number) => {
     const res = await api.post("/cart", { variant_id, quantity });
     return res.data;

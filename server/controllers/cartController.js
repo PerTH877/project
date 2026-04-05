@@ -5,6 +5,7 @@ const { parseId } = require("../utils/marketplace");
 const cartService = require("../services/cart.service");
 
 
+
 const getCartItems = async (req, res, next) => {
   const userId = req.user?.user_id;
 
@@ -18,19 +19,6 @@ const getCartItems = async (req, res, next) => {
   }
 };
 
-
-const getCartTotal = async (req, res, next) => {
-  const userId = req.user?.user_id;
-
-  if (!userId) return res.status(401).json({ error: "Unauthorized" });
-
-  try {
-    const result = await cartService.getCartTotal(pool, userId);
-    return res.json(result);
-  } catch (err) {
-    return next(err);
-  }
-};
 
 
 const addToCart = async (req, res, next) => {
@@ -112,7 +100,7 @@ const toggleSaveForLater = async (req, res, next) => {
 
 module.exports = {
   getCartItems,
-  getCartTotal,
+
   addToCart,
   updateCartItem,
   removeCartItem,

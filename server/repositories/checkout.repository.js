@@ -3,11 +3,6 @@
 
 
 
-
-
-
-
-
 async function getAddressById(client, addressId, userId) {
   const result = await client.query(
     `SELECT address_id, city, is_active
